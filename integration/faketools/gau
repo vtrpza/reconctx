@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+[ "$#" -eq 1 ] && [ "$1" = "--version" ]
+[ -z "${PYTHONPATH+x}" ]
+printf 'gau version 2.2.4\n'

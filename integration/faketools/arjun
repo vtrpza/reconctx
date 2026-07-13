@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+[ "$#" -eq 1 ] && [ "$1" = "--version" ]
+[ -z "${PYTHONHOME+x}" ]
+printf 'usage: arjun -u http://127.0.0.1/\n'
+printf 'arjun=2.2.7\n'

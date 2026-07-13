@@ -1,0 +1,27 @@
+profile_version: reconctx-profile/v0
+name: web-blackbox
+environment_allowlist:
+  - LANG
+  - PATH
+  - TZ
+limits:
+  arjun_max_targets: 25
+tools:
+  - name: gau
+    activity_class: passive_external
+    rate_limit_per_second: 1
+    concurrency: 1
+    parallelism: 1
+    timeout_seconds: 45
+  - name: katana
+    activity_class: active_approved
+    rate_limit_per_second: 2
+    concurrency: 1
+    parallelism: 1
+    timeout_seconds: 10
+  - name: arjun
+    activity_class: active_approved
+    rate_limit_per_second: 1
+    concurrency: 1
+    parallelism: 1
+    timeout_seconds: 15

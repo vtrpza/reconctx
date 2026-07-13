@@ -26,10 +26,20 @@ type ToolPlan struct {
 	Name          string     `json:"name"`
 	ResolvedPath  string     `json:"resolved_path"`
 	Version       string     `json:"version"`
+	Binary        ToolBinary `json:"binary"`
 	ActivityClass string     `json:"activity_class"`
 	Argv          []string   `json:"argv"`
 	Limits        ToolLimits `json:"limits"`
 	OutputPaths   []string   `json:"output_paths"`
+}
+
+type ToolBinary struct {
+	SHA256 string `json:"sha256"`
+	Mode   uint32 `json:"mode"`
+	UID    uint32 `json:"uid"`
+	GID    uint32 `json:"gid"`
+	Device uint64 `json:"device"`
+	Inode  uint64 `json:"inode"`
 }
 
 type ToolLimits struct {

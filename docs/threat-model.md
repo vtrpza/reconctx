@@ -160,6 +160,8 @@ Network scope is an additional boundary around every tool request/redirect/candi
 - clear dangerous loader variables;
 - disable tool auto-update during runs.
 
+Preflight path policy is fail-closed: every resolved path component must be owned by root or the effective user and must not be group/world writable. The only exception is a root-owned sticky directory such as `/tmp`; the executable itself must be a regular executable file and its hash, mode, owner, device and inode enter the plan digest.
+
 **Residual risk:** binary can be replaced by the same local account between check and exec. Linux implementation should minimize TOCTOU and record the executed file identity; stronger fd-based execution may be evaluated in the spike.
 
 ### T-04 — Scope drift, redirect escape, and canonicalization mismatch

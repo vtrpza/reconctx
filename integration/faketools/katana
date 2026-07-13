@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+[ "$#" -eq 1 ] && [ "$1" = "-version" ]
+[ -z "${LD_PRELOAD+x}" ]
+printf '[INF] Current Version: v1.6.1\n'

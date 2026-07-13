@@ -79,6 +79,9 @@ func validatePlan(plan model.Plan) error {
 		if tool.Name == "" || tool.Version == "" || tool.ActivityClass == "" {
 			return fmt.Errorf("tool %d identity is incomplete", index+1)
 		}
+		if !validDigest(tool.Binary.SHA256) || tool.Binary.Mode == 0 || tool.Binary.Mode&^0o777 != 0 || tool.Binary.Mode&0o111 == 0 || tool.Binary.Mode&0o022 != 0 || tool.Binary.Device == 0 || tool.Binary.Inode == 0 {
+			return fmt.Errorf("tool %d binary identity is invalid", index+1)
+		}
 		if !filepath.IsAbs(tool.ResolvedPath) || filepath.Clean(tool.ResolvedPath) != tool.ResolvedPath || strings.ContainsRune(tool.ResolvedPath, '\x00') {
 			return fmt.Errorf("tool %d path must be absolute and clean", index+1)
 		}
