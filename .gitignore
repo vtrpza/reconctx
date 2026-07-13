@@ -24,6 +24,7 @@ htmlcov/
 /spikes/**/stack-spike
 /build/
 /dist/
+/reconctx
 
 # Superseded local capture bundle (sanitized fixtures are tracked instead)
 /gau-fixture.tgz
