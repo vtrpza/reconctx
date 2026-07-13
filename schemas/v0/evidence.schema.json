@@ -1,0 +1,57 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/evidence.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact": {
+      "$ref": "common.schema.json#/$defs/artifact"
+    },
+    "excerpt_redacted": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/evidenceId"
+    },
+    "locator": {
+      "$ref": "common.schema.json#/$defs/locator"
+    },
+    "record_type": {
+      "const": "evidence"
+    },
+    "redaction_status": {
+      "enum": [
+        "not_needed",
+        "redacted",
+        "withheld"
+      ]
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "scope_decision": {
+      "$ref": "common.schema.json#/$defs/scopeDecision"
+    },
+    "tool_execution_id": {
+      "$ref": "common.schema.json#/$defs/toolExecutionId"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "tool_execution_id",
+    "artifact",
+    "locator",
+    "redaction_status",
+    "scope_decision"
+  ],
+  "title": "Evidence record v0",
+  "type": "object"
+}

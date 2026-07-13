@@ -1,0 +1,55 @@
+{
+  "case_id": "ARJUN-REQUEST-TIMEOUT-LOOPBACK",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/arjun",
+    "-u",
+    "http://127.0.0.1:18080/slow?delay_ms=5000",
+    "-m",
+    "GET",
+    "-w",
+    "fixtures/shared/arjun-minimal.txt",
+    "-t",
+    "1",
+    "--rate-limit",
+    "1",
+    "-T",
+    "1",
+    "-oJ",
+    "private-captures/failure-paths/ARJUN-REQUEST-TIMEOUT-LOOPBACK/native-output.json"
+  ],
+  "duration_ms": 4149,
+  "environment_file": null,
+  "exit_code": 1,
+  "finished_at": "2026-07-13T00:12:35-03:00",
+  "interrupted": false,
+  "native_output_absent": true,
+  "native_output_files": [],
+  "notes": [
+    "process exited 1 before the 30s outer timeout",
+    "Arjun raised AttributeError after the deterministic request-timeout path",
+    "this is tool failure, not a zero-result or parameter-absence observation"
+  ],
+  "origin": "copied-from-loopback-capture",
+  "request_timeout_seconds": 1,
+  "sanitization": {
+    "replacements": [
+      "ANSI control sequences removed",
+      "local workspace path replaced with [WORKSPACE]",
+      "tool_version corrected from pre-fix IP misparse using runtime stdout banner"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "ARJUN-REQUEST-TIMEOUT-LOOPBACK",
+  "source_manifest_sha256": "306feb03d68625ef9bd1bb1e236b2381b2d78694de0f858e64a4f85bf4610c20",
+  "started_at": "2026-07-13T00:12:31-03:00",
+  "stderr_file": "stderr.sanitized.log",
+  "stdout_file": "stdout.sanitized.log",
+  "target": "http://127.0.0.1:18080/slow?delay_ms=5000",
+  "target_class": "loopback-fixture",
+  "timed_out": false,
+  "tool": "arjun",
+  "tool_version": "2.2.7"
+}

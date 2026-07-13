@@ -1,0 +1,21 @@
+{
+  "accepted_parameters": [
+    "debug",
+    "filter",
+    "id"
+  ],
+  "case_id": "ARJUN-JSON-FOUND",
+  "detected_parameters": [
+    "filter",
+    "id"
+  ],
+  "detection_recall": 0.6666666666666666,
+  "false_negatives": [
+    "debug"
+  ],
+  "false_positives": [],
+  "notes": [
+    "Ground truth comes from the deterministic local target, not from Arjun output."
+  ],
+  "schema_version": "fixture-ground-truth/v0"
+}

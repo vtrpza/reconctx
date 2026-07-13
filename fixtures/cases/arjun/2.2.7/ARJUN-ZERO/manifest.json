@@ -1,0 +1,53 @@
+{
+  "accepted_parameters_ground_truth": [],
+  "case_id": "ARJUN-ZERO",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/arjun",
+    "-u",
+    "http://127.0.0.1:18080/api/no-params",
+    "-m",
+    "GET",
+    "-w",
+    "fixtures/shared/arjun-minimal.txt",
+    "-t",
+    "1",
+    "--rate-limit",
+    "1",
+    "-T",
+    "15",
+    "-oJ",
+    "private-captures/arjun/2.2.7/ARJUN-ZERO/native-output.json"
+  ],
+  "detected_parameters": [],
+  "duration_ms": 6178,
+  "environment_file": null,
+  "exit_code": 0,
+  "false_negatives_observed": [],
+  "finished_at": "2026-07-12T22:00:35.189730661-03:00",
+  "interrupted": false,
+  "native_output_absent": true,
+  "native_output_files": [],
+  "notes": [
+    "Arjun exits zero and creates no -oJ file when no parameters are discovered."
+  ],
+  "origin": "copied-from-loopback-capture",
+  "sanitization": {
+    "replacements": [
+      "ANSI control sequences removed",
+      "carriage-return progress converted to lines"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "PRIVATE-ARJUN-ZERO",
+  "started_at": "2026-07-12T22:00:29.011819937-03:00",
+  "stderr_file": null,
+  "stdout_file": "stdout.sanitized.log",
+  "target": "http://127.0.0.1:18080/api/no-params",
+  "target_class": "loopback-fixture",
+  "timed_out": false,
+  "tool": "arjun",
+  "tool_version": "2.2.7"
+}

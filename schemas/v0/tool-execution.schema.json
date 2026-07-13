@@ -1,0 +1,186 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/tool-execution.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "success_zero"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "coverage": {
+            "const": "zero"
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "activity_class": {
+      "enum": [
+        "passive_external",
+        "active_local",
+        "active_approved",
+        "offline",
+        "preflight"
+      ]
+    },
+    "adapter_version": {
+      "pattern": "^[a-z0-9_-]+-adapter/v[0-9]+$",
+      "type": "string"
+    },
+    "auth_context_id": {
+      "$ref": "common.schema.json#/$defs/authContextId"
+    },
+    "approval_phase": {
+      "enum": [
+        "initial_recon",
+        "parameter_discovery",
+        "offline_import",
+        "preflight"
+      ]
+    },
+    "argv_redacted": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "artifacts": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/artifactSummary"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "coverage": {
+      "enum": [
+        "complete",
+        "partial",
+        "zero",
+        "unknown"
+      ]
+    },
+    "duration_ms": {
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "exit_code": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "finished_at": {
+      "$ref": "common.schema.json#/$defs/nullableTimestamp"
+    },
+    "gaps": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "type": "array"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/toolExecutionId"
+    },
+    "provider_status": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/providerStatus"
+      },
+      "type": "array"
+    },
+    "record_type": {
+      "const": "tool_execution"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "started_at": {
+      "$ref": "common.schema.json#/$defs/nullableTimestamp"
+    },
+    "status": {
+      "enum": [
+        "success",
+        "success_zero",
+        "partial",
+        "failed",
+        "interrupted",
+        "timed_out",
+        "skipped",
+        "unsupported_format"
+      ]
+    },
+    "tool": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "enum": [
+            "gau",
+            "katana",
+            "arjun",
+            "unknown"
+          ]
+        },
+        "resolved_path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "resolved_path"
+      ],
+      "type": "object"
+    },
+    "warnings": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "tool",
+    "adapter_version",
+    "auth_context_id",
+    "activity_class",
+    "approval_phase",
+    "argv_redacted",
+    "started_at",
+    "finished_at",
+    "duration_ms",
+    "exit_code",
+    "status",
+    "coverage",
+    "artifacts",
+    "provider_status",
+    "warnings",
+    "gaps"
+  ],
+  "title": "ToolExecution record v0",
+  "type": "object"
+}

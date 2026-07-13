@@ -1,0 +1,62 @@
+{
+  "case_id": "KAT-NORMAL-MINIMAL",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/katana",
+    "-u",
+    "http://127.0.0.1:18080/",
+    "-cs",
+    "^http://127\\.0\\.0\\.1:18080(?:/|$)",
+    "-d",
+    "2",
+    "-j",
+    "-nc",
+    "-silent",
+    "-rl",
+    "2",
+    "-c",
+    "1",
+    "-p",
+    "1",
+    "-timeout",
+    "10",
+    "-or",
+    "-ob",
+    "-o",
+    "private-captures/katana/v1.6.1/KAT-NORMAL-MINIMAL/native-output.jsonl"
+  ],
+  "duration_ms": 17066,
+  "environment_file": null,
+  "exit_code": 0,
+  "finished_at": "2026-07-12T21:58:38.372051379-03:00",
+  "interrupted": false,
+  "native_output_files": [
+    "native-output.jsonl"
+  ],
+  "notes": [
+    "All six records are GET/200.",
+    "Raw request, raw response and body omitted by -or -ob.",
+    "External link exposed by the target was not emitted."
+  ],
+  "origin": "copied-from-loopback-capture",
+  "record_count": 6,
+  "sanitization": {
+    "replacements": [],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "scope_boundary": "127.0.0.1:18080 only",
+  "source_case_id": "PRIVATE-KAT-NORMAL-MINIMAL",
+  "started_at": "2026-07-12T21:58:21.306034375-03:00",
+  "stderr_file": null,
+  "stdout_equals_native_output": true,
+  "stdout_file": null,
+  "target": "http://127.0.0.1:18080/",
+  "target_class": "loopback-fixture",
+  "timed_out": false,
+  "tool": "katana",
+  "tool_version": "v1.6.1",
+  "unique_endpoint_count": 6,
+  "valid_jsonl_records": 6
+}

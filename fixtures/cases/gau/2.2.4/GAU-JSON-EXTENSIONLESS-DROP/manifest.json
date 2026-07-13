@@ -1,0 +1,48 @@
+{
+  "case_id": "GAU-JSON-EXTENSIONLESS-DROP",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/gau",
+    "[OWNED_APEX]",
+    "--subs",
+    "--verbose",
+    "--json",
+    "--providers",
+    "otx,urlscan",
+    "--threads",
+    "1",
+    "--timeout",
+    "45",
+    "--o",
+    "[OUTPUT]/native-output.json"
+  ],
+  "command_display_redacted": "./tools/bin/gau [OWNED_APEX] --subs --verbose --json --providers otx,urlscan --threads 1 --timeout 45 --o [OUTPUT]",
+  "exit_code": 0,
+  "interrupted": false,
+  "native_output_files": [
+    "native-output.json"
+  ],
+  "notes": [
+    "GAU v2.2.4 JSON writer drops extensionless URLs because the empty extension is in the blacklist.",
+    "The same provider data produces three text records and two unique URLs without --json.",
+    "Upstream master adds ext != empty before blacklist lookup; latest release remains v2.2.4."
+  ],
+  "origin": "derived",
+  "provider_records_observed_out_of_band": 3,
+  "record_count": 0,
+  "sanitization": {
+    "replacements": [
+      "owned domain -> fixture.test",
+      "home path -> [HOME]"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "PRIVATE-GAU-APEX-SUBS-JSON",
+  "stderr_file": "stderr.sanitized.log",
+  "target_class": "synthetic-sanitized",
+  "timed_out": false,
+  "tool": "gau",
+  "tool_version": "2.2.4"
+}

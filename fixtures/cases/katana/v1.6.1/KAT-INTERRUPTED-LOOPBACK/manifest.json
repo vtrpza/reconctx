@@ -1,0 +1,63 @@
+{
+  "case_id": "KAT-INTERRUPTED-LOOPBACK",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/katana",
+    "-u",
+    "http://127.0.0.1:18080/",
+    "-cs",
+    "^http://127\\.0\\.0\\.1:18080(?:/|$)",
+    "-d",
+    "2",
+    "-j",
+    "-nc",
+    "-silent",
+    "-rl",
+    "1",
+    "-c",
+    "1",
+    "-p",
+    "1",
+    "-timeout",
+    "10",
+    "-or",
+    "-ob",
+    "-o",
+    "private-captures/failure-paths/KAT-INTERRUPTED-LOOPBACK/native-output.jsonl"
+  ],
+  "duration_ms": 3015,
+  "environment_file": null,
+  "exit_code": 124,
+  "finished_at": "2026-07-12T23:48:24-03:00",
+  "interrupted": true,
+  "native_output_absent": false,
+  "native_output_files": [
+    "native-output.jsonl"
+  ],
+  "notes": [
+    "outer timeout exit 124 is separate from tool semantic status",
+    "partial crawl must not be treated as complete coverage"
+  ],
+  "origin": "copied-from-loopback-capture",
+  "record_count": 3,
+  "sanitization": {
+    "replacements": [
+      "tool_version corrected from empty pre-fix manifest using immutable version.txt banner"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "KAT-INTERRUPTED-LOOPBACK",
+  "source_manifest_sha256": "2067d3e57de5e5155fe47eb5972bbb4380c315ba6444181328529b0be3847359",
+  "started_at": "2026-07-12T23:48:21-03:00",
+  "stderr_file": null,
+  "stdout_equals_native_output": true,
+  "stdout_file": null,
+  "target": "http://127.0.0.1:18080/",
+  "target_class": "loopback-fixture",
+  "timed_out": true,
+  "tool": "katana",
+  "tool_version": "v1.6.1",
+  "valid_jsonl_records": 3
+}

@@ -1,0 +1,45 @@
+# Private evidence
+/private-captures/*
+!/private-captures/.gitignore
+
+# Local tool installations and machine-specific wrappers
+/.tools/
+/tools/bin/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Go/build outputs
+*.test
+*.out
+/spikes/**/reconctx-spike
+/spikes/**/stack-spike
+/build/
+/dist/
+
+# Superseded local capture bundle (sanitized fixtures are tracked instead)
+/gau-fixture.tgz
+
+# Local secrets/config
+.env
+.env.*
+!.env.example
+
+# Editors/OS
+.idea/
+.vscode/
+.DS_Store
+*~
+*.swp
+
+# Temporary benchmark inputs and scratch
+/tmp/
+*.tmp

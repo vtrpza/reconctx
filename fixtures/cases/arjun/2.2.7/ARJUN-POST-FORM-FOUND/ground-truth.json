@@ -1,0 +1,18 @@
+{
+  "accepted_parameters": [
+    "id",
+    "name"
+  ],
+  "case_id": "ARJUN-POST-FORM-FOUND",
+  "detected_parameters": [
+    "id",
+    "name"
+  ],
+  "detection_recall": 1.0,
+  "false_negatives": [],
+  "false_positives": [],
+  "notes": [
+    "Ground truth comes from the deterministic local target, not from Arjun output."
+  ],
+  "schema_version": "fixture-ground-truth/v0"
+}

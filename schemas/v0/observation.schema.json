@@ -1,0 +1,368 @@
+{
+  "$defs": {
+    "historicalDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_observation_url": {
+          "format": "uri",
+          "type": "string"
+        },
+        "canonical_route_url": {
+          "format": "uri",
+          "type": "string"
+        },
+        "current_reachability": {
+          "const": "unknown"
+        },
+        "provider_set": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "query_pairs": {
+          "items": {
+            "$ref": "common.schema.json#/$defs/queryPair"
+          },
+          "type": "array"
+        },
+        "url_raw": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url_raw",
+        "canonical_observation_url",
+        "canonical_route_url",
+        "query_pairs",
+        "provider_set",
+        "current_reachability"
+      ],
+      "type": "object"
+    },
+    "httpDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "canonical_observation_url": {
+          "format": "uri",
+          "type": "string"
+        },
+        "content_length": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "content_type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "method": {
+          "$ref": "common.schema.json#/$defs/httpMethod"
+        },
+        "request_url_raw": {
+          "type": "string"
+        },
+        "status_code": {
+          "maximum": 599,
+          "minimum": 100,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "request_url_raw",
+        "canonical_observation_url",
+        "method",
+        "status_code",
+        "content_length",
+        "content_type"
+      ],
+      "type": "object"
+    },
+    "parameterDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "acceptance_state": {
+          "enum": [
+            "unknown",
+            "accepted_fixture_ground_truth",
+            "rejected_fixture_ground_truth"
+          ]
+        },
+        "detection_basis": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "location": {
+          "$ref": "common.schema.json#/$defs/parameterLocation"
+        },
+        "parameter_name": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "parameter_name",
+        "location",
+        "source_mode",
+        "detection_basis",
+        "acceptance_state"
+      ],
+      "type": "object"
+    },
+    "warningDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "provider"
+      ],
+      "type": "object"
+    },
+    "zeroDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "result_kind": {
+          "enum": [
+            "parameter_discovery",
+            "url_collection",
+            "crawl",
+            "provider_query"
+          ]
+        },
+        "target_url": {
+          "format": "uri",
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "result_kind",
+        "target_url",
+        "message"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "https://schemas.reconctx.dev/v0/observation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "observation_type": {
+            "const": "historical_url"
+          }
+        },
+        "required": [
+          "observation_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "details": {
+            "$ref": "#/$defs/historicalDetails"
+          },
+          "semantic_state": {
+            "const": "historical"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "observation_type": {
+            "const": "http_response"
+          }
+        },
+        "required": [
+          "observation_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "details": {
+            "$ref": "#/$defs/httpDetails"
+          },
+          "semantic_state": {
+            "const": "observed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "observation_type": {
+            "const": "parameter_discovery"
+          }
+        },
+        "required": [
+          "observation_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "details": {
+            "$ref": "#/$defs/parameterDetails"
+          },
+          "semantic_state": {
+            "enum": [
+              "historical",
+              "observed",
+              "bruteforced",
+              "user_supplied",
+              "inferred"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "observation_type": {
+            "const": "zero_result"
+          }
+        },
+        "required": [
+          "observation_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "details": {
+            "$ref": "#/$defs/zeroDetails"
+          },
+          "semantic_state": {
+            "const": "observed"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "observation_type": {
+            "const": "tool_warning"
+          }
+        },
+        "required": [
+          "observation_type"
+        ]
+      },
+      "then": {
+        "properties": {
+          "details": {
+            "$ref": "#/$defs/warningDetails"
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "details": {},
+    "evidence_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/observationId"
+    },
+    "observation_type": {
+      "enum": [
+        "historical_url",
+        "http_response",
+        "parameter_discovery",
+        "zero_result",
+        "tool_warning"
+      ]
+    },
+    "observed_at": {
+      "$ref": "common.schema.json#/$defs/nullableTimestamp"
+    },
+    "record_type": {
+      "const": "observation"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "scope_decision": {
+      "$ref": "common.schema.json#/$defs/scopeDecision"
+    },
+    "semantic_state": {
+      "$ref": "common.schema.json#/$defs/semanticState"
+    },
+    "subject": {
+      "$ref": "common.schema.json#/$defs/entityRef"
+    },
+    "auth_context_id": {
+      "$ref": "common.schema.json#/$defs/authContextId"
+    },
+    "tool_execution_id": {
+      "$ref": "common.schema.json#/$defs/toolExecutionId"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "tool_execution_id",
+    "auth_context_id",
+    "observation_type",
+    "semantic_state",
+    "subject",
+    "scope_decision",
+    "observed_at",
+    "evidence_ids",
+    "details"
+  ],
+  "title": "Observation record v0",
+  "type": "object"
+}

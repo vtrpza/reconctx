@@ -1,0 +1,28 @@
+{
+  "schema_version": "fixture-manifest/v0",
+  "case_id": "TOOL-CASE-ID",
+  "tool": "katana|gau|arjun",
+  "tool_version": "VERSION",
+  "origin": "captured|derived",
+  "source_case_id": null,
+  "target_class": "loopback|owned-archive-domain|synthetic",
+  "command_argv": [],
+  "command_display_redacted": "COMMAND",
+  "started_at": "RFC3339",
+  "finished_at": "RFC3339",
+  "duration_ms": 0,
+  "exit_code": 0,
+  "interrupted": false,
+  "timed_out": false,
+  "stdout_file": "stdout.raw",
+  "stderr_file": "stderr.raw",
+  "native_output_files": [],
+  "checksums_file": "checksums.sha256",
+  "environment_file": "environment.json",
+  "sanitization": {
+    "status": "pending|passed|rejected",
+    "ruleset_version": "sanitize/v0",
+    "replacements": []
+  },
+  "notes": []
+}

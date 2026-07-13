@@ -1,0 +1,31 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/record.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/run.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/tool-execution.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/asset.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/endpoint.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/parameter.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/observation.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/evidence.schema.json"
+    },
+    {
+      "$ref": "https://schemas.reconctx.dev/v0/relationship.schema.json"
+    }
+  ],
+  "title": "Any normalized record v0"
+}

@@ -1,0 +1,23 @@
+{
+  "case_id": "GAU-JSON-EXTENSIONLESS-DROP",
+  "expected_maximum_records": 0,
+  "expected_minimum_records": 0,
+  "expected_semantics": [
+    "empty JSONL output despite provider records",
+    "exit code zero does not prove completeness",
+    "adapter must surface suspected data loss"
+  ],
+  "expected_unique_urls": 0,
+  "expected_warnings": [
+    "GAU v2.2.4 extensionless JSON drop"
+  ],
+  "must_not_contain": [
+    "owned domain",
+    "real credentials"
+  ],
+  "parse_status": "known-tool-bug",
+  "required_native_fields": [],
+  "reviewed_at": "2026-07-12T21:42:35.938170-03:00",
+  "reviewed_by": "Hermes source-assisted validation",
+  "schema_version": "fixture-expected/v0"
+}

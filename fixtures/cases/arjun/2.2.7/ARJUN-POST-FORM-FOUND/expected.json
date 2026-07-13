@@ -1,0 +1,24 @@
+{
+  "case_id": "ARJUN-POST-FORM-FOUND",
+  "expected_detected_parameters": [
+    "id",
+    "name"
+  ],
+  "expected_method_label": "POST",
+  "expected_semantics": [
+    "parameter discovery observation",
+    "tool detection is not endpoint ground truth",
+    "top-level object keyed by target URL",
+    "headers describe generated request defaults"
+  ],
+  "must_not_contain": [
+    "authorization header values",
+    "cookie values",
+    "real credentials"
+  ],
+  "native_output_presence": "present",
+  "parse_status": "success",
+  "reviewed_at": "2026-07-12T21:59:54.295154707-03:00",
+  "reviewed_by": "Hermes structural and ground-truth differential validation",
+  "schema_version": "fixture-expected/v0"
+}

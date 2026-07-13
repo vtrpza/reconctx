@@ -1,0 +1,68 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/asset.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_kind": {
+      "enum": [
+        "origin",
+        "host",
+        "ip",
+        "url"
+      ]
+    },
+    "canonical_value": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "display_value": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/assetId"
+    },
+    "observation_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/observationId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "record_type": {
+      "const": "asset"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "scope_decision": {
+      "$ref": "common.schema.json#/$defs/scopeDecision"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "asset_kind",
+    "canonical_value",
+    "display_value",
+    "scope_decision",
+    "observation_ids",
+    "evidence_ids"
+  ],
+  "title": "Asset record v0",
+  "type": "object"
+}

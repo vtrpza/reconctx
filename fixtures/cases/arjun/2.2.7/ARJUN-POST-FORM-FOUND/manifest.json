@@ -1,0 +1,59 @@
+{
+  "accepted_parameters_ground_truth": [
+    "id",
+    "name"
+  ],
+  "case_id": "ARJUN-POST-FORM-FOUND",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/arjun",
+    "-u",
+    "http://127.0.0.1:18080/api/update",
+    "-m",
+    "POST",
+    "-w",
+    "fixtures/shared/arjun-minimal.txt",
+    "-t",
+    "1",
+    "--rate-limit",
+    "1",
+    "-T",
+    "15",
+    "-oJ",
+    "private-captures/arjun/2.2.7/ARJUN-POST-FORM-FOUND/native-output.json"
+  ],
+  "detected_parameters": [
+    "id",
+    "name"
+  ],
+  "duration_ms": 23168,
+  "environment_file": null,
+  "exit_code": 0,
+  "false_negatives_observed": [],
+  "finished_at": "2026-07-12T21:59:54.295154707-03:00",
+  "interrupted": false,
+  "native_output_absent": false,
+  "native_output_files": [
+    "native-output.json"
+  ],
+  "notes": [],
+  "origin": "copied-from-loopback-capture",
+  "sanitization": {
+    "replacements": [
+      "ANSI control sequences removed",
+      "carriage-return progress converted to lines"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "PRIVATE-ARJUN-POST-FORM-FOUND",
+  "started_at": "2026-07-12T21:59:31.127262448-03:00",
+  "stderr_file": null,
+  "stdout_file": "stdout.sanitized.log",
+  "target": "http://127.0.0.1:18080/api/update",
+  "target_class": "loopback-fixture",
+  "timed_out": false,
+  "tool": "arjun",
+  "tool_version": "2.2.7"
+}

@@ -1,0 +1,27 @@
+{
+  "baseline_version": "competitive-baseline/v0",
+  "method": "official docs plus pinned source inspection; no active execution",
+  "pivot_threshold_percent": 80.0,
+  "targets": {
+    "bbot": {
+      "ref": "stable/v3.0.0",
+      "commit": "5355bd1f968b73f06f9d99ada2be5c095e6c5dbe",
+      "acceptance_scores": [0.5, 0.5, 0.5, 0.5, 0.5, 1.0, 0.0, 0.5, 0.5, 0.5, 0.0, 0.5, 0.0, 1.0],
+      "score": 6.5,
+      "maximum": 14.0,
+      "percent": 46.4,
+      "decision": "NO_PIVOT; future output.json importer"
+    },
+    "reconftw": {
+      "ref": "main",
+      "commit": "9a5f12f62cb18d2a948a6a3c820219a8229bcfb5",
+      "acceptance_scores": [0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0],
+      "score": 4.0,
+      "maximum": 14.0,
+      "percent": 28.6,
+      "decision": "NO_PIVOT; optional low-priority flat-artifact importer"
+    }
+  },
+  "product_decision": "independent compiler-first core plus minimal GAU/Katana/Arjun runner; BBOT importer after the initial vertical slice",
+  "runtime_validation": "not performed because active tool execution remains operator-controlled"
+}

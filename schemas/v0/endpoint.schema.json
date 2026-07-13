@@ -1,0 +1,147 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/endpoint.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "method_known": {
+            "const": true
+          }
+        },
+        "required": [
+          "method_known"
+        ]
+      },
+      "then": {
+        "properties": {
+          "method": {
+            "$ref": "common.schema.json#/$defs/httpMethod"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "method_known": {
+            "const": false
+          }
+        },
+        "required": [
+          "method_known"
+        ]
+      },
+      "then": {
+        "properties": {
+          "method": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "canonical_route_url": {
+      "format": "uri",
+      "pattern": "^https?://[^?#]+$",
+      "type": "string"
+    },
+    "evidence_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "host": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/endpointId"
+    },
+    "method": {
+      "anyOf": [
+        {
+          "$ref": "common.schema.json#/$defs/httpMethod"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "method_known": {
+      "type": "boolean"
+    },
+    "observation_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/observationId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "origin_asset_id": {
+      "$ref": "common.schema.json#/$defs/assetId"
+    },
+    "path": {
+      "pattern": "^/",
+      "type": "string"
+    },
+    "port": {
+      "maximum": 65535,
+      "minimum": 1,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "record_type": {
+      "const": "endpoint"
+    },
+    "route_template": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "scheme": {
+      "enum": [
+        "http",
+        "https"
+      ]
+    },
+    "scope_decision": {
+      "$ref": "common.schema.json#/$defs/scopeDecision"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "origin_asset_id",
+    "canonical_route_url",
+    "scheme",
+    "host",
+    "port",
+    "path",
+    "method",
+    "method_known",
+    "route_template",
+    "scope_decision",
+    "observation_ids",
+    "evidence_ids"
+  ],
+  "title": "Endpoint record v0",
+  "type": "object"
+}

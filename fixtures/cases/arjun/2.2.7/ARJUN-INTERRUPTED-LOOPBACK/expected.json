@@ -1,0 +1,23 @@
+{
+  "case_id": "ARJUN-INTERRUPTED-LOOPBACK",
+  "expected_semantics": [
+    "interrupted execution with preserved stdout",
+    "native JSON absent after interruption",
+    "no parameter-presence or parameter-absence claim"
+  ],
+  "expected_stdout_markers": [
+    "Processing chunks: 3/3"
+  ],
+  "must_not_contain": [
+    "authorization header values",
+    "cookie values",
+    "real credentials",
+    "local home paths"
+  ],
+  "native_output_presence": "absent",
+  "parse_status": "partial",
+  "reviewed_at": "2026-07-13T00:17:09-03:00",
+  "reviewed_by": "Hermes offline structural and provenance review",
+  "schema_version": "fixture-expected/v0",
+  "semantic_status": "interrupted"
+}

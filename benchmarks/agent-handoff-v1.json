@@ -1,0 +1,100 @@
+{
+  "benchmark_version": "agent-handoff/v1",
+  "verdict": "PASS",
+  "model_identifier": null,
+  "model_identifier_note": "runtime reported ?; all conditions ran in one parallel batch",
+  "conditions": {
+    "raw": {
+      "input_files": 16,
+      "unique_input_bytes": 9332,
+      "api_calls": 8,
+      "runtime_seconds": 309.63,
+      "answer_bytes": 15910,
+      "full_evidence_ids_cited": 0,
+      "valid_evidence_ids": 0,
+      "unknown_evidence_ids": 0,
+      "material_unsupported_claims": 0,
+      "semantic_recovery": {
+        "temporal": "complete",
+        "method_location": "partial_source_limited",
+        "run_status_and_declared_gaps": "partial_source_limited",
+        "evidence_ids": "unavailable",
+        "candidate_exclusions": "correctly_unknown",
+        "findings": "correctly_none_confirmed"
+      }
+    },
+    "normalized": {
+      "input_files": 1,
+      "unique_input_bytes": 69529,
+      "aggregate_bytes_reported_read": 139058,
+      "api_calls": 3,
+      "runtime_seconds": 225.76,
+      "answer_bytes": 15988,
+      "full_evidence_ids_cited": 15,
+      "valid_evidence_ids": 15,
+      "unknown_evidence_ids": 0,
+      "material_unsupported_claims": 0,
+      "semantic_recovery": {
+        "temporal": "complete",
+        "method_location": "complete",
+        "run_status_and_declared_gaps": "complete",
+        "evidence_ids": "complete",
+        "candidate_exclusions": "correctly_unknown",
+        "findings": "correctly_none_confirmed"
+      }
+    },
+    "compact": {
+      "input_files": 1,
+      "unique_input_bytes": 7064,
+      "aggregate_bytes_reported_read": 7064,
+      "api_calls": 2,
+      "runtime_seconds": 148.43,
+      "answer_bytes": 12753,
+      "full_evidence_ids_cited": 15,
+      "valid_evidence_ids": 15,
+      "unknown_evidence_ids": 0,
+      "material_unsupported_claims": 0,
+      "semantic_recovery": {
+        "temporal": "complete",
+        "method_location": "complete",
+        "run_status_and_declared_gaps": "complete",
+        "evidence_ids": "complete",
+        "candidate_exclusions": "correctly_unknown",
+        "findings": "correctly_none_confirmed"
+      }
+    }
+  },
+  "compact_deltas": {
+    "unique_input_bytes_vs_raw_reduction_percent": 24.3,
+    "unique_input_bytes_vs_normalized_reduction_percent": 89.8,
+    "api_calls_vs_raw_reduction_percent": 75.0,
+    "runtime_vs_raw_reduction_percent": 52.1,
+    "runtime_vs_normalized_reduction_percent": 34.3
+  },
+  "compact_pass_rules": {
+    "no_historical_current_confusion": true,
+    "no_nonexistent_evidence_id": true,
+    "no_finding_claim": true,
+    "answers_common_questions_from_context_only": true,
+    "source_bytes_lower_than_raw": true,
+    "api_calls_not_greater_than_raw": true,
+    "missing_candidate_queue_reported_as_gap": true
+  },
+  "pass_rules_met": 7,
+  "pass_rules_total": 7,
+  "known_limitation": "run/tool diagnostics and negative/absence claims do not always have their own Evidence ID; agents correctly disclosed this",
+  "results": {
+    "raw": {
+      "path": "benchmarks/results/agent-handoff-v1/raw.md",
+      "sha256": "b4c877c1b624adcfac7d554c85f0e0221b662e5466de9d3b89d8816f060cfe57"
+    },
+    "normalized": {
+      "path": "benchmarks/results/agent-handoff-v1/normalized.md",
+      "sha256": "1e93e3012fb5dd47797a67ca22c9f8a0ac6f0f4c516e42e9fdc2e9b01c6fa9ad"
+    },
+    "compact": {
+      "path": "benchmarks/results/agent-handoff-v1/compact.md",
+      "sha256": "59923cd5376711aa54e5a947441e01e67a4cabd0339124a02e531e646b3cada3"
+    }
+  }
+}

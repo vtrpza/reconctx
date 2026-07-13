@@ -1,0 +1,3 @@
+https://fixture.test/article/
+https://finance.fixture.test/
+https://finance.fixture.test/

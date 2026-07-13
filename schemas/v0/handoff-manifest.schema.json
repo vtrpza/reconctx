@@ -1,0 +1,168 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/handoff-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "canonicalization_policy": {
+      "const": "url-canonicalization/v0"
+    },
+    "counts": {
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "endpoint": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "evidence": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "observation": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "parameter": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "relationship": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "run": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tool_execution": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "run",
+        "tool_execution",
+        "asset",
+        "endpoint",
+        "parameter",
+        "observation",
+        "evidence",
+        "relationship"
+      ],
+      "type": "object"
+    },
+    "entrypoint": {
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+      "type": "string"
+    },
+    "example_kind": {
+      "enum": [
+        "sanitized_fixture_composite",
+        null
+      ]
+    },
+    "files": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "media_type": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "path": {
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "context",
+              "documentation",
+              "normalized",
+              "raw"
+            ]
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "size_bytes": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "path",
+          "role",
+          "sha256",
+          "size_bytes",
+          "media_type"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "manifest_type": {
+      "const": "reconctx_handoff"
+    },
+    "normalized_entrypoint": {
+      "pattern": "^normalized/.+\\.jsonl$",
+      "type": "string"
+    },
+    "raw_policy": {
+      "enum": [
+        "embedded_sanitized",
+        "embedded_unredacted",
+        "referenced",
+        "omitted"
+      ]
+    },
+    "run_id": {
+      "pattern": "^run_[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "reconctx/v0"
+    },
+    "source_fixture_cases": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "status": {
+      "enum": [
+        "success",
+        "partial",
+        "failed"
+      ]
+    }
+  },
+  "required": [
+    "schema_version",
+    "manifest_type",
+    "canonicalization_policy",
+    "run_id",
+    "generated_at",
+    "status",
+    "example_kind",
+    "source_fixture_cases",
+    "raw_policy",
+    "counts",
+    "entrypoint",
+    "normalized_entrypoint",
+    "files"
+  ],
+  "title": "Recon Context Compiler handoff manifest v0",
+  "type": "object"
+}

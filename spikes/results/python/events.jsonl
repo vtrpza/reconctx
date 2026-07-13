@@ -1,0 +1,6 @@
+{"method":"GET","route_url":"http://127.0.0.1:18080/","source_line":1,"status_code":200,"timestamp":"2026-07-12T21:58:26.35426179-03:00","url_raw":"http://127.0.0.1:18080/"}
+{"method":"GET","route_url":"http://127.0.0.1:18080/static/app.js","source_line":2,"status_code":200,"timestamp":"2026-07-12T21:58:27.353356635-03:00","url_raw":"http://127.0.0.1:18080/static/app.js"}
+{"method":"GET","route_url":"http://127.0.0.1:18080/api/search","source_line":3,"status_code":200,"timestamp":"2026-07-12T21:58:27.354057165-03:00","url_raw":"http://127.0.0.1:18080/api/search"}
+{"method":"GET","route_url":"http://127.0.0.1:18080/api/users","source_line":4,"status_code":200,"timestamp":"2026-07-12T21:58:28.3542937-03:00","url_raw":"http://127.0.0.1:18080/api/users?id=1"}
+{"method":"GET","route_url":"http://127.0.0.1:18080/search","source_line":5,"status_code":200,"timestamp":"2026-07-12T21:58:28.355955104-03:00","url_raw":"http://127.0.0.1:18080/search?q=seed"}
+{"method":"GET","route_url":"http://127.0.0.1:18080/login","source_line":6,"status_code":200,"timestamp":"2026-07-12T21:58:29.353963309-03:00","url_raw":"http://127.0.0.1:18080/login"}

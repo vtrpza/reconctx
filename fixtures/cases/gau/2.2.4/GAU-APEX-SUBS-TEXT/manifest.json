@@ -1,0 +1,55 @@
+{
+  "case_id": "GAU-APEX-SUBS-TEXT",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/gau",
+    "[OWNED_APEX]",
+    "--subs",
+    "--verbose",
+    "--providers",
+    "otx,urlscan",
+    "--threads",
+    "1",
+    "--timeout",
+    "45",
+    "--o",
+    "[OUTPUT]/native-output.txt"
+  ],
+  "command_display_redacted": "./tools/bin/gau [OWNED_APEX] --subs --verbose --providers otx,urlscan --threads 1 --timeout 45 --o [OUTPUT]",
+  "duration_ms": null,
+  "environment_file": null,
+  "exit_code": 0,
+  "finished_at": "2026-07-12T21:42:35.938170-03:00",
+  "interrupted": false,
+  "native_output_files": [
+    "native-output.txt"
+  ],
+  "notes": [
+    "Selected the second half because stderr metadata belongs to the second run.",
+    "Duplicate URL intentionally preserved.",
+    "All three source URLs had extensionless paths."
+  ],
+  "origin": "derived",
+  "provenance_granularity": "provider-set at run level; native lines have no provider field",
+  "record_count": 3,
+  "sanitization": {
+    "replacements": [
+      "owned apex -> fixture.test",
+      "owned subdomain suffix -> fixture.test",
+      "non-root extensionless path -> /article/",
+      "home path -> [HOME]"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "PRIVATE-GAU-APEX-SUBS-TEXT-APPENDED",
+  "started_at": "2026-07-12T21:42:34-03:00",
+  "stderr_file": "stderr.sanitized.log",
+  "stdout_file": null,
+  "target_class": "synthetic-sanitized",
+  "timed_out": false,
+  "tool": "gau",
+  "tool_version": "2.2.4",
+  "unique_url_count": 2
+}

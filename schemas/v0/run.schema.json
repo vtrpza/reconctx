@@ -1,0 +1,127 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/run.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "canonicalization_policy": {
+      "const": "url-canonicalization/v0"
+    },
+    "created_at": {
+      "$ref": "common.schema.json#/$defs/timestamp"
+    },
+    "finished_at": {
+      "$ref": "common.schema.json#/$defs/nullableTimestamp"
+    },
+    "gaps": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "type": "array"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "record_type": {
+      "const": "run"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "scope": {
+      "additionalProperties": false,
+      "properties": {
+        "approved_at": {
+          "$ref": "common.schema.json#/$defs/timestamp"
+        },
+        "approved_by": {
+          "const": "operator"
+        },
+        "authorization_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "external_policy": {
+          "enum": [
+            "reject",
+            "record_only"
+          ]
+        },
+        "mode": {
+          "const": "allowlist"
+        },
+        "roots": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "kind": {
+                "enum": [
+                  "origin",
+                  "host",
+                  "url_prefix"
+                ]
+              },
+              "value": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "mode",
+        "roots",
+        "external_policy",
+        "approved_by",
+        "approved_at"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "running",
+        "success",
+        "partial",
+        "failed",
+        "interrupted"
+      ]
+    },
+    "tool_execution_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/toolExecutionId"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "warnings": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/diagnostic"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "created_at",
+    "status",
+    "canonicalization_policy",
+    "scope",
+    "tool_execution_ids",
+    "warnings",
+    "gaps"
+  ],
+  "title": "Run record v0",
+  "type": "object"
+}

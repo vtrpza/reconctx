@@ -1,0 +1,3 @@
+time="[TIMESTAMP]" level=warning msg="error reading config: Config file [HOME]/.gau.toml not found, using default config"
+time="[TIMESTAMP]" level=info msg="fetching fixture.test" page=0 provider=otx
+time="[TIMESTAMP]" level=info msg="fetching fixture.test" page=0 provider=urlscan

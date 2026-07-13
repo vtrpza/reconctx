@@ -1,0 +1,64 @@
+{
+  "accepted_parameters_ground_truth": [
+    "debug",
+    "filter",
+    "id"
+  ],
+  "case_id": "ARJUN-JSON-FOUND",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/arjun",
+    "-u",
+    "http://127.0.0.1:18080/api/json",
+    "-m",
+    "JSON",
+    "-w",
+    "fixtures/shared/arjun-minimal.txt",
+    "-t",
+    "1",
+    "--rate-limit",
+    "1",
+    "-T",
+    "15",
+    "-oJ",
+    "private-captures/arjun/2.2.7/ARJUN-JSON-FOUND/native-output.json"
+  ],
+  "detected_parameters": [
+    "filter",
+    "id"
+  ],
+  "duration_ms": 13162,
+  "environment_file": null,
+  "exit_code": 0,
+  "false_negatives_observed": [
+    "debug"
+  ],
+  "finished_at": "2026-07-12T22:00:17.814365916-03:00",
+  "interrupted": false,
+  "native_output_absent": false,
+  "native_output_files": [
+    "native-output.json"
+  ],
+  "notes": [
+    "Arjun native method JSON denotes HTTP POST with a JSON body."
+  ],
+  "origin": "copied-from-loopback-capture",
+  "sanitization": {
+    "replacements": [
+      "ANSI control sequences removed",
+      "carriage-return progress converted to lines"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "PRIVATE-ARJUN-JSON-FOUND",
+  "started_at": "2026-07-12T22:00:04.652410104-03:00",
+  "stderr_file": null,
+  "stdout_file": "stdout.sanitized.log",
+  "target": "http://127.0.0.1:18080/api/json",
+  "target_class": "loopback-fixture",
+  "timed_out": false,
+  "tool": "arjun",
+  "tool_version": "2.2.7"
+}

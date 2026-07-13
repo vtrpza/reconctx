@@ -1,0 +1,10 @@
+Traceback (most recent call last):
+  File "[WORKSPACE]/.tools/arjun-venv/bin/arjun", line 6, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "[WORKSPACE]/.tools/arjun-venv/lib/python3.13/site-packages/arjun/__main__.py", line 204, in main
+    these_params = initialize(request, wordlist, single_url=is_single)
+  File "[WORKSPACE]/.tools/arjun-venv/lib/python3.13/site-packages/arjun/__main__.py", line 133, in initialize
+    mem.var['healthy_url'] = response_1.status_code not in (400, 413, 418, 429, 503)
+                             ^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'str' object has no attribute 'status_code'

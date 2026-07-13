@@ -1,0 +1,520 @@
+{
+  "$defs": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "native_output",
+            "stdout",
+            "stderr",
+            "command",
+            "manifest",
+            "environment",
+            "ground_truth",
+            "other"
+          ]
+        },
+        "sanitized": {
+          "type": "boolean"
+        },
+        "sha256": {
+          "$ref": "common.schema.json#/$defs/sha256"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "role",
+        "path",
+        "sha256",
+        "size_bytes",
+        "media_type",
+        "sanitized"
+      ],
+      "type": "object"
+    },
+    "authContextId": {
+      "anyOf": [
+        {
+          "pattern": "^authctx_[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "artifactSummary": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "present": {
+                "const": true
+              }
+            },
+            "required": [
+              "present"
+            ]
+          },
+          "then": {
+            "properties": {
+              "sha256": {
+                "$ref": "common.schema.json#/$defs/sha256"
+              },
+              "size_bytes": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "present": {
+                "const": false
+              }
+            },
+            "required": [
+              "present"
+            ]
+          },
+          "then": {
+            "properties": {
+              "sha256": {
+                "type": "null"
+              },
+              "size_bytes": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "duplicate_of_role": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "media_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+          "type": "string"
+        },
+        "present": {
+          "type": "boolean"
+        },
+        "role": {
+          "enum": [
+            "native_output",
+            "stdout",
+            "stderr",
+            "command",
+            "manifest",
+            "environment",
+            "ground_truth",
+            "other"
+          ]
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "$ref": "common.schema.json#/$defs/sha256"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "role",
+        "path",
+        "present",
+        "sha256",
+        "size_bytes",
+        "media_type"
+      ],
+      "type": "object"
+    },
+    "assetId": {
+      "pattern": "^asset_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "diagnostic": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "pattern": "^[a-z0-9][a-z0-9_.-]*$",
+          "type": "string"
+        },
+        "evidence_ids": {
+          "items": {
+            "$ref": "common.schema.json#/$defs/evidenceId"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "message": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "provider": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ]
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "severity",
+        "provider",
+        "evidence_ids"
+      ],
+      "type": "object"
+    },
+    "endpointId": {
+      "pattern": "^ep_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "entityRef": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "record_type": {
+          "enum": [
+            "run",
+            "tool_execution",
+            "asset",
+            "endpoint",
+            "parameter",
+            "observation",
+            "evidence",
+            "relationship"
+          ]
+        }
+      },
+      "required": [
+        "record_type",
+        "id"
+      ],
+      "type": "object"
+    },
+    "evidenceId": {
+      "pattern": "^ev_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "httpMethod": {
+      "pattern": "^[!#$%&'*+.^_`|~0-9A-Za-z-]+$",
+      "type": "string"
+    },
+    "locator": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "whole_artifact"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "line_range"
+            },
+            "line_end": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "line_start": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "kind",
+            "line_start",
+            "line_end"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "json_pointer"
+            },
+            "pointer": {
+              "pattern": "^(?:|/.*)$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "pointer"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "byte_end_exclusive": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "byte_start": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "kind": {
+              "const": "byte_range"
+            }
+          },
+          "required": [
+            "kind",
+            "byte_start",
+            "byte_end_exclusive"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "nullableTimestamp": {
+      "format": "date-time",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "observationId": {
+      "pattern": "^obs_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "parameterId": {
+      "pattern": "^param_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "parameterLocation": {
+      "enum": [
+        "query",
+        "form",
+        "json",
+        "header",
+        "cookie",
+        "path",
+        "unknown"
+      ]
+    },
+    "providerStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "error_code": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_ids": {
+          "items": {
+            "$ref": "common.schema.json#/$defs/evidenceId"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "message": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "provider": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "record_count": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "success",
+            "empty",
+            "error",
+            "unknown",
+            "not_run"
+          ]
+        }
+      },
+      "required": [
+        "provider",
+        "status",
+        "record_count",
+        "error_code",
+        "message",
+        "evidence_ids"
+      ],
+      "type": "object"
+    },
+    "queryPair": {
+      "additionalProperties": false,
+      "properties": {
+        "has_equals": {
+          "type": "boolean"
+        },
+        "index": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "name": {
+          "type": "string"
+        },
+        "raw_name": {
+          "type": "string"
+        },
+        "raw_value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "index",
+        "raw_name",
+        "raw_value",
+        "name",
+        "value",
+        "has_equals"
+      ],
+      "type": "object"
+    },
+    "recordType": {
+      "enum": [
+        "run",
+        "tool_execution",
+        "asset",
+        "endpoint",
+        "parameter",
+        "observation",
+        "evidence",
+        "relationship"
+      ]
+    },
+    "relationshipId": {
+      "pattern": "^rel_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "runId": {
+      "pattern": "^run_[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": "reconctx/v0"
+    },
+    "scopeDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "classification": {
+          "enum": [
+            "in_scope",
+            "out_of_scope",
+            "unknown"
+          ]
+        },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "rule_id": {
+          "minLength": 1,
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "classification",
+        "rule_id",
+        "reason"
+      ],
+      "type": "object"
+    },
+    "semanticState": {
+      "enum": [
+        "observed",
+        "historical",
+        "inferred",
+        "bruteforced",
+        "user_supplied"
+      ]
+    },
+    "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "timestamp": {
+      "format": "date-time",
+      "type": "string"
+    },
+    "toolExecutionId": {
+      "pattern": "^tx_[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "type": "string"
+    }
+  },
+  "$id": "https://schemas.reconctx.dev/v0/common.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Recon Context Compiler v0 common definitions"
+}

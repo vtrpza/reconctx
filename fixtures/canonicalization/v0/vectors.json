@@ -1,0 +1,130 @@
+{
+  "policy_version": "url-canonicalization/v0",
+  "source_basis": [
+    "RFC 3986",
+    "GAU 2.2.4 fixtures",
+    "Katana v1.6.1 fixtures",
+    "Arjun 2.2.7 fixtures"
+  ],
+  "url_cases": [
+    {
+      "id": "lowercase-default-port-fragment-query-lossless",
+      "input": "HTTP://Example.COM:80?b=2&a=1&a&empty=#section",
+      "expected": {
+        "origin": "http://example.com",
+        "path": "/",
+        "canonical_route_url": "http://example.com/",
+        "canonical_observation_url": "http://example.com/?b=2&a=1&a&empty=",
+        "fragment_present": true,
+        "fragment_raw": "section"
+      }
+    },
+    {
+      "id": "dot-segments-and-percent-encoding",
+      "input": "https://EXAMPLE.com/a/./b/../%7euser/%2f?q=%7e+x%2f",
+      "expected": {
+        "host": "example.com",
+        "path": "/a/~user/%2F",
+        "query_canonical": "q=~+x%2F",
+        "canonical_observation_url": "https://example.com/a/~user/%2F?q=~+x%2F"
+      }
+    },
+    {
+      "id": "path-case-repeated-and-trailing-slash-preserved",
+      "input": "https://example.com/A//b/",
+      "expected": {
+        "path": "/A//b/",
+        "canonical_route_url": "https://example.com/A//b/"
+      }
+    },
+    {
+      "id": "https-default-port-removed",
+      "input": "https://example.com:443/login",
+      "expected": {
+        "port": null,
+        "origin": "https://example.com",
+        "canonical_route_url": "https://example.com/login"
+      }
+    },
+    {
+      "id": "non-default-port-preserved",
+      "input": "http://127.0.0.1:18080/api/search?q=fixture",
+      "expected": {
+        "host": "127.0.0.1",
+        "port": 18080,
+        "canonical_route_url": "http://127.0.0.1:18080/api/search",
+        "canonical_observation_url": "http://127.0.0.1:18080/api/search?q=fixture"
+      }
+    },
+    {
+      "id": "query-order-preserved",
+      "input": "https://example.com/users?sort=asc&id=2&id=1",
+      "expected": {
+        "query_raw": "sort=asc&id=2&id=1",
+        "query_canonical": "sort=asc&id=2&id=1",
+        "canonical_route_url": "https://example.com/users"
+      }
+    },
+    {
+      "id": "empty-query-distinct-in-observation",
+      "input": "https://example.com/path?",
+      "expected": {
+        "query_present": true,
+        "query_raw": "",
+        "query_canonical": "",
+        "canonical_observation_url": "https://example.com/path?"
+      }
+    },
+    {
+      "id": "idna-and-utf8-path",
+      "input": "https://BÜCHER.example/é",
+      "expected": {
+        "host": "xn--bcher-kva.example",
+        "path": "/%C3%A9",
+        "canonical_route_url": "https://xn--bcher-kva.example/%C3%A9"
+      }
+    },
+    {
+      "id": "ipv6-compression",
+      "input": "http://[2001:0db8::1]:80/a",
+      "expected": {
+        "host": "2001:db8::1",
+        "origin": "http://[2001:db8::1]",
+        "canonical_route_url": "http://[2001:db8::1]/a"
+      }
+    },
+    {
+      "id": "gau-extensionless-path-retained",
+      "input": "https://finance.fixture.test/",
+      "expected": {
+        "path": "/",
+        "canonical_route_url": "https://finance.fixture.test/"
+      }
+    },
+    {
+      "id": "relative-rejected",
+      "input": "/relative",
+      "error": "absolute HTTP(S) URL required"
+    },
+    {
+      "id": "userinfo-rejected",
+      "input": "https://user:pass@example.com/",
+      "error": "userinfo forbidden"
+    },
+    {
+      "id": "invalid-percent-rejected",
+      "input": "https://example.com/%ZZ",
+      "error": "invalid percent escape"
+    },
+    {
+      "id": "unsupported-scheme-rejected",
+      "input": "ftp://example.com/file",
+      "error": "unsupported scheme"
+    },
+    {
+      "id": "invalid-port-rejected",
+      "input": "https://example.com:99999/",
+      "error": "port out of range"
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "benchmark_version": "agent-handoff/v0",
+  "verdict": "PARTIAL",
+  "conditions": {
+    "raw": {
+      "allowed_input_files": 16,
+      "allowed_input_bytes": 9332,
+      "agent_api_calls": 4,
+      "runtime_duration_seconds": 169.57,
+      "answer_bytes": 7957,
+      "full_evidence_ids_cited": 0,
+      "relative_artifacts_cited": 11,
+      "missing_relative_artifacts": 0,
+      "material_unsupported_claims": 0
+    },
+    "normalized": {
+      "allowed_input_files": 1,
+      "allowed_input_bytes": 69529,
+      "records": 84,
+      "agent_api_calls": 3,
+      "runtime_duration_seconds": 180.62,
+      "answer_bytes": 11393,
+      "full_evidence_ids_cited": 15,
+      "unknown_evidence_ids": 0,
+      "material_unsupported_claims": 0
+    },
+    "handoff": {
+      "package_files": 29,
+      "package_bytes": 158757,
+      "context_front_door_bytes": 662,
+      "agent_api_calls": 13,
+      "runtime_duration_seconds": 347.24,
+      "answer_bytes": 9896,
+      "full_evidence_ids_cited": 15,
+      "unknown_evidence_ids": 0,
+      "raw_locators_resolved": 15,
+      "material_unsupported_claims": 0
+    }
+  },
+  "acceptance": {
+    "factual_accuracy": "PASS_ALL",
+    "historical_vs_current": "PASS_ALL",
+    "parameter_method_location": "PASS_ALL_WITH_RAW_SOURCE_LIMITATIONS",
+    "multi_source_reasoning": "PASS_ALL",
+    "explicit_gaps": "PASS_ALL",
+    "stable_evidence_ids": "PASS_NORMALIZED_AND_HANDOFF_ONLY",
+    "evidence_id_to_raw_locator": "PASS_HANDOFF_ONLY",
+    "context_efficiency_vs_raw": "FAIL_NORMALIZED_AND_HANDOFF_ON_TINY_FIXTURE"
+  }
+}

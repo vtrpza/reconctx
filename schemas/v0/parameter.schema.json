@@ -1,0 +1,73 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/parameter.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "discovery_kinds": {
+      "items": {
+        "enum": [
+          "historical_query",
+          "observed_query",
+          "bruteforced",
+          "user_supplied",
+          "inferred"
+        ]
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "endpoint_id": {
+      "$ref": "common.schema.json#/$defs/endpointId"
+    },
+    "evidence_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/parameterId"
+    },
+    "location": {
+      "$ref": "common.schema.json#/$defs/parameterLocation"
+    },
+    "name": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "observation_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/observationId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "record_type": {
+      "const": "parameter"
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "endpoint_id",
+    "name",
+    "location",
+    "discovery_kinds",
+    "observation_ids",
+    "evidence_ids"
+  ],
+  "title": "Parameter record v0",
+  "type": "object"
+}

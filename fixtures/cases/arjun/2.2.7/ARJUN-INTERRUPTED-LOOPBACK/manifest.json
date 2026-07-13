@@ -1,0 +1,54 @@
+{
+  "case_id": "ARJUN-INTERRUPTED-LOOPBACK",
+  "checksums_file": "checksums.sha256",
+  "command_argv": [
+    "./tools/bin/arjun",
+    "-u",
+    "http://127.0.0.1:18080/api/search",
+    "-m",
+    "GET",
+    "-w",
+    "fixtures/shared/arjun-minimal.txt",
+    "-t",
+    "1",
+    "--rate-limit",
+    "1",
+    "-T",
+    "15",
+    "-oJ",
+    "private-captures/failure-paths/ARJUN-INTERRUPTED-LOOPBACK/native-output.json"
+  ],
+  "duration_ms": 7165,
+  "environment_file": null,
+  "exit_code": 124,
+  "finished_at": "2026-07-13T00:12:16-03:00",
+  "interrupted": true,
+  "native_output_absent": true,
+  "native_output_files": [],
+  "notes": [
+    "outer timeout exit 124 is separate from tool semantic status",
+    "interruption occurred during chunk processing",
+    "absent native JSON is not a zero-result claim"
+  ],
+  "origin": "copied-from-loopback-capture",
+  "sanitization": {
+    "replacements": [
+      "ANSI control sequences removed",
+      "carriage-return progress converted to lines",
+      "tool_version corrected from pre-fix IP misparse using runtime stdout banner"
+    ],
+    "ruleset_version": "sanitize/v0",
+    "status": "passed"
+  },
+  "schema_version": "fixture-manifest/v0",
+  "source_case_id": "ARJUN-INTERRUPTED-LOOPBACK",
+  "source_manifest_sha256": "c1db8ac7afbbcba9c92535fe6f5ca9baeb6ee2bedfd98826ecd6f3f6051506ac",
+  "started_at": "2026-07-13T00:12:09-03:00",
+  "stderr_file": null,
+  "stdout_file": "stdout.sanitized.log",
+  "target": "http://127.0.0.1:18080/api/search",
+  "target_class": "loopback-fixture",
+  "timed_out": true,
+  "tool": "arjun",
+  "tool_version": "2.2.7"
+}

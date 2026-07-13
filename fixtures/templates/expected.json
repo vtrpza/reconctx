@@ -1,0 +1,18 @@
+{
+  "schema_version": "fixture-expected/v0",
+  "case_id": "TOOL-CASE-ID",
+  "parse_status": "success|partial|unsupported|error",
+  "expected_minimum_records": 0,
+  "expected_maximum_records": null,
+  "expected_semantics": [],
+  "required_native_fields": [],
+  "expected_warnings": [],
+  "must_not_contain": [
+    "authorization header values",
+    "cookie values",
+    "real credentials",
+    "out-of-scope activity"
+  ],
+  "reviewed_by": null,
+  "reviewed_at": null
+}

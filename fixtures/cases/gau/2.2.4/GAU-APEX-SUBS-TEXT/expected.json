@@ -1,0 +1,30 @@
+{
+  "case_id": "GAU-APEX-SUBS-TEXT",
+  "expected_duplicate_records": 1,
+  "expected_maximum_records": 3,
+  "expected_minimum_records": 3,
+  "expected_semantics": [
+    "line-oriented URL output",
+    "historical/provider-derived observation",
+    "extensionless paths retained",
+    "duplicates preserved in raw",
+    "provider identity unavailable per record"
+  ],
+  "expected_unique_urls": 2,
+  "expected_warnings": [
+    "missing optional ~/.gau.toml uses defaults"
+  ],
+  "must_not_contain": [
+    "owned domain",
+    "authorization header values",
+    "cookie values",
+    "real credentials"
+  ],
+  "parse_status": "success",
+  "required_native_fields": [
+    "one absolute http/https URL per non-empty line"
+  ],
+  "reviewed_at": "2026-07-12T21:42:35.938170-03:00",
+  "reviewed_by": "Hermes automated structural validation",
+  "schema_version": "fixture-expected/v0"
+}

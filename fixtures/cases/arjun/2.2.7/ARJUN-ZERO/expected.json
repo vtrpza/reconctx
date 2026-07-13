@@ -1,0 +1,20 @@
+{
+  "case_id": "ARJUN-ZERO",
+  "expected_detected_parameters": [],
+  "expected_method_label": "GET",
+  "expected_semantics": [
+    "parameter discovery observation",
+    "tool detection is not endpoint ground truth",
+    "zero-result represented by absent -oJ file and stdout message"
+  ],
+  "must_not_contain": [
+    "authorization header values",
+    "cookie values",
+    "real credentials"
+  ],
+  "native_output_presence": "absent",
+  "parse_status": "success",
+  "reviewed_at": "2026-07-12T22:00:35.189730661-03:00",
+  "reviewed_by": "Hermes structural and ground-truth differential validation",
+  "schema_version": "fixture-expected/v0"
+}

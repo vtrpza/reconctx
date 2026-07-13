@@ -1,0 +1,45 @@
+{
+  "case_id": "KAT-NORMAL-MINIMAL",
+  "expected_maximum_records": 6,
+  "expected_methods": [
+    "GET"
+  ],
+  "expected_minimum_records": 6,
+  "expected_paths": [
+    "/",
+    "/static/app.js",
+    "/api/search",
+    "/api/users?*",
+    "/search?*",
+    "/login"
+  ],
+  "expected_semantics": [
+    "current crawl observation",
+    "scope-filtered loopback crawl",
+    "JSONL one object per line"
+  ],
+  "expected_status_codes": [
+    200
+  ],
+  "expected_unique_endpoints": 6,
+  "forbidden_record_fields": [
+    "request.raw",
+    "response.raw",
+    "response.body"
+  ],
+  "must_not_contain": [
+    "external.example.invalid"
+  ],
+  "parse_status": "success",
+  "required_record_fields": [
+    "timestamp",
+    "request.endpoint",
+    "request.method",
+    "response.status_code",
+    "response.headers",
+    "response.content_length"
+  ],
+  "reviewed_at": "2026-07-12T22:00:35.189730661-03:00",
+  "reviewed_by": "Hermes structural validation",
+  "schema_version": "fixture-expected/v0"
+}

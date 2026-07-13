@@ -1,0 +1,228 @@
+{
+  "canonicalization_policy": "url-canonicalization/v0",
+  "counts": {
+    "asset": 3,
+    "endpoint": 11,
+    "evidence": 15,
+    "observation": 17,
+    "parameter": 7,
+    "relationship": 24,
+    "run": 1,
+    "tool_execution": 6
+  },
+  "entrypoint": "CONTEXT.md",
+  "example_kind": "sanitized_fixture_composite",
+  "files": [
+    {
+      "media_type": "text/markdown",
+      "path": "CONTEXT.md",
+      "role": "context",
+      "sha256": "711fbe2b38e0d665e45ae39f069b25430cf7c09106c415b268f01e39128e4757",
+      "size_bytes": 7064
+    },
+    {
+      "media_type": "text/markdown",
+      "path": "README.md",
+      "role": "documentation",
+      "sha256": "89bdc790494b4c4397b3c3d1a5ce25088b4f54066f409ad10906700e18d72a48",
+      "size_bytes": 197
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/agent-view.jsonl",
+      "role": "normalized",
+      "sha256": "5c838d255914e774f329039e210f5319dcf6ba3834430987a3b366cec3fabb08",
+      "size_bytes": 7058
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/assets.jsonl",
+      "role": "normalized",
+      "sha256": "b57c2ab0cb5ea262676af25f0246588857bb9e837b749075dbfb58f909e092ca",
+      "size_bytes": 3946
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/endpoints.jsonl",
+      "role": "normalized",
+      "sha256": "e57f1d182a7b63918f3f82bd5f257acb9861d5fa37fe4b48f602df3bb138d497",
+      "size_bytes": 9770
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/evidence-index.jsonl",
+      "role": "normalized",
+      "sha256": "828076c37eeefdf42feba6232b73311d18aa8ddf0deb82b38fa0d1d1cf3c3009",
+      "size_bytes": 11042
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/observations.jsonl",
+      "role": "normalized",
+      "sha256": "68def01e937dd5e545898a319b533e30b62f4ed78d66b586a37266e74e736915",
+      "size_bytes": 15942
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/parameters.jsonl",
+      "role": "normalized",
+      "sha256": "e709bd51afa6a5cfd8f0135cdb72e9224038811d36131f5cb00030098b58f27d",
+      "size_bytes": 3856
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/records.jsonl",
+      "role": "normalized",
+      "sha256": "98abba21b7049ac1696777197539d5ae656b0d26fe96c23825c03d7b66942877",
+      "size_bytes": 69529
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/relationships.jsonl",
+      "role": "normalized",
+      "sha256": "26a27cbf7c39c2c017ba8d3808fb2366198644511bf012bb297bf3d4bd0f99d7",
+      "size_bytes": 14263
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/runs.jsonl",
+      "role": "normalized",
+      "sha256": "bbcdd7c5c6747a999249bcaddbe1360bd4811a68169cc16503f31f65325e240e",
+      "size_bytes": 1169
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "normalized/tool-executions.jsonl",
+      "role": "normalized",
+      "sha256": "d475f80587b49ceb6c8b8402c902e8c8ae1eae8124cc04b87d35acd7386a2ce9",
+      "size_bytes": 9541
+    },
+    {
+      "media_type": "application/json",
+      "path": "raw/arjun-get/native-output.json",
+      "role": "raw",
+      "sha256": "4cd1714c32a18e42531029e61ddf86b65ddf9170b893b9f3d94db5f79f70ddc2",
+      "size_bytes": 519
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-get/stderr.raw",
+      "role": "raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-get/stdout.raw",
+      "role": "raw",
+      "sha256": "df7740da44fea0fe59bcd38deed2df209cecb80ac9bcb0acdf0562d2cb472621",
+      "size_bytes": 623
+    },
+    {
+      "media_type": "application/json",
+      "path": "raw/arjun-json/native-output.json",
+      "role": "raw",
+      "sha256": "ec8b1d5a2eaa1f5501b77930125ce5ea7a3ead45ff962e4d3e75479d94451639",
+      "size_bytes": 637
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-json/stderr.raw",
+      "role": "raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-json/stdout.raw",
+      "role": "raw",
+      "sha256": "3311098fd6229752a15ad3639eb682854a44104a80ff15096335e74cbec869bf",
+      "size_bytes": 671
+    },
+    {
+      "media_type": "application/json",
+      "path": "raw/arjun-post-form/native-output.json",
+      "role": "raw",
+      "sha256": "3964b58abf6a8ff31811ee3696152ed54c1c91dfc887eae5d83103b23e94c87c",
+      "size_bytes": 541
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-post-form/stderr.raw",
+      "role": "raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-post-form/stdout.raw",
+      "role": "raw",
+      "sha256": "f25e75eb620009bfbe568a44b3b15b63d2e4c06c76171c00f88c0e1f99221893",
+      "size_bytes": 804
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-zero/stderr.raw",
+      "role": "raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/arjun-zero/stdout.raw",
+      "role": "raw",
+      "sha256": "259ad39bf357b846c24f0b4fde0fe97ecadb9834d25aee1ea74e6e6c057fb5c0",
+      "size_bytes": 413
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/gau/native-output.txt",
+      "role": "raw",
+      "sha256": "1090d97c43d59788679f2b35f44a2d52f652ced9cf900b5644c257b990eda133",
+      "size_bytes": 90
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/gau/stderr.raw",
+      "role": "raw",
+      "sha256": "9ae45b8c1adc4df88051b0c8b81546b38252ee9e73876a7eb8ec23271dfab0a9",
+      "size_bytes": 324
+    },
+    {
+      "media_type": "application/x-ndjson",
+      "path": "raw/katana/native-output.jsonl",
+      "role": "raw",
+      "sha256": "6a426479fea649b6c561a41db08136ee3512532e8219a7387fd327309eba6177",
+      "size_bytes": 2355
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/katana/stderr.raw",
+      "role": "raw",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0
+    },
+    {
+      "media_type": "text/plain",
+      "path": "raw/katana/stdout.raw",
+      "role": "raw",
+      "sha256": "6a426479fea649b6c561a41db08136ee3512532e8219a7387fd327309eba6177",
+      "size_bytes": 2355
+    }
+  ],
+  "generated_at": "2026-07-12T22:00:35.189730-03:00",
+  "manifest_type": "reconctx_handoff",
+  "normalized_entrypoint": "normalized/records.jsonl",
+  "raw_policy": "embedded_sanitized",
+  "run_id": "run_fixture_web_blackbox_v0",
+  "schema_version": "reconctx/v0",
+  "source_fixture_cases": [
+    "GAU-APEX-SUBS-TEXT",
+    "KAT-NORMAL-MINIMAL",
+    "ARJUN-GET-FOUND",
+    "ARJUN-POST-FORM-FOUND",
+    "ARJUN-JSON-FOUND",
+    "ARJUN-ZERO"
+  ],
+  "status": "success"
+}

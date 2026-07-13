@@ -1,0 +1,15 @@
+{
+  "accepted_parameters": [
+    "debug",
+    "q"
+  ],
+  "case_id": "ARJUN-INTERRUPTED-LOOPBACK",
+  "detected_parameters": null,
+  "detection_recall": null,
+  "false_negatives": null,
+  "false_positives": null,
+  "notes": [
+    "The run was interrupted; detection correctness is unknown and must not be scored."
+  ],
+  "schema_version": "fixture-ground-truth/v0"
+}

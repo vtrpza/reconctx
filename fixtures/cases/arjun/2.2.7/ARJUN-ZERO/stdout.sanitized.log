@@ -1,0 +1,16 @@
+    _
+   /_| _ '
+  (  |/ /(//) v2.2.7
+      _/
+
+[*] Scanning 0/1: http://127.0.0.1:18080/api/no-params
+[*] Probing the target for stability
+[*] Analysing HTTP response for anomalies
+[+] Extracted 7 parameters from response for testing
+[*] Logicforcing the URL endpoint
+[!] Processing chunks: 1/4
+[!] Processing chunks: 2/4
+[!] Processing chunks: 3/4
+[!] Processing chunks: 4/4
+[!] No parameters were discovered.
+

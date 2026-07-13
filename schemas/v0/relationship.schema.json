@@ -1,0 +1,92 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/relationship.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attributes": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "null"
+          },
+          {
+            "items": {
+              "type": [
+                "string",
+                "number",
+                "integer",
+                "boolean",
+                "null"
+              ]
+            },
+            "type": "array"
+          }
+        ]
+      },
+      "type": "object"
+    },
+    "evidence_ids": {
+      "items": {
+        "$ref": "common.schema.json#/$defs/evidenceId"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "from_ref": {
+      "$ref": "common.schema.json#/$defs/entityRef"
+    },
+    "id": {
+      "$ref": "common.schema.json#/$defs/relationshipId"
+    },
+    "record_type": {
+      "const": "relationship"
+    },
+    "relationship_type": {
+      "enum": [
+        "evidence_for",
+        "observed_at",
+        "has_parameter",
+        "derived_from",
+        "emitted_by",
+        "same_route_as",
+        "redirects_to",
+        "multi_source"
+      ]
+    },
+    "run_id": {
+      "$ref": "common.schema.json#/$defs/runId"
+    },
+    "schema_version": {
+      "$ref": "common.schema.json#/$defs/schemaVersion"
+    },
+    "to_ref": {
+      "$ref": "common.schema.json#/$defs/entityRef"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "id",
+    "run_id",
+    "relationship_type",
+    "from_ref",
+    "to_ref",
+    "evidence_ids",
+    "attributes"
+  ],
+  "title": "Relationship record v0",
+  "type": "object"
+}

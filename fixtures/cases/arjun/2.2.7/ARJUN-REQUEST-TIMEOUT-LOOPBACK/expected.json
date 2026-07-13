@@ -1,0 +1,25 @@
+{
+  "case_id": "ARJUN-REQUEST-TIMEOUT-LOOPBACK",
+  "expected_exit_code": 1,
+  "expected_semantics": [
+    "request-timeout scenario produced an internal Arjun exception",
+    "tool failure before parameter discovery",
+    "no parameter-presence or parameter-absence claim"
+  ],
+  "expected_stderr_markers": [
+    "AttributeError: 'str' object has no attribute 'status_code'"
+  ],
+  "must_not_contain": [
+    "authorization header values",
+    "cookie values",
+    "real credentials",
+    "local home paths"
+  ],
+  "native_output_presence": "absent",
+  "outer_timeout": false,
+  "parse_status": "tool_error",
+  "reviewed_at": "2026-07-13T00:17:09-03:00",
+  "reviewed_by": "Hermes offline structural and provenance review",
+  "schema_version": "fixture-expected/v0",
+  "semantic_status": "failed"
+}
