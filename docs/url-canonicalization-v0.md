@@ -74,6 +74,8 @@ Rejected input remains available through raw evidence and yields no Endpoint ent
 7. Remove default port `80` for HTTP and `443` for HTTPS.
 8. Preserve non-default ports.
 
+The v0 identity contract pins Unicode 15.0.0: Go uses `x/net/idna` plus the generated IDNA2008 PVALID/CONTEXT ranges from Python `idna==3.4`. The Python oracle is pinned to the same release, and the test suite compares both implementations directly across more than 40,000 Unicode host inputs.
+
 Examples:
 
 ```text
@@ -173,8 +175,10 @@ A GAU URL and Katana GET URL with the same route do not share an Endpoint ID bec
 Identity material:
 
 ```text
-reconctx-ep-v0 NUL method-or-* NUL canonical_route_url
+reconctx-ep-v0 NUL method-identity NUL canonical_route_url
 ```
+
+`method-identity` is the uppercase method, `*` for unknown, and `\*` for the valid literal `*` method. The escaped form keeps unknown distinct without changing existing v0 IDs.
 
 ID:
 

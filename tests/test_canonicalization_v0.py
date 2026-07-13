@@ -1,6 +1,11 @@
 import json
+import os
 from pathlib import Path
+import subprocess
+import tempfile
 import unittest
+
+import idna
 
 from reference.canonicalization_v0 import (
     CanonicalizationError,
@@ -12,6 +17,79 @@ from reference.canonicalization_v0 import (
 
 
 class CanonicalizationV0Tests(unittest.TestCase):
+    def test_go_and_python_canonicalizers_match_directly(self):
+        self.maxDiff = None
+        self.assertEqual(idna.__version__, "3.4")
+        repository = Path(__file__).parents[1]
+        inputs = [
+            f"https://a{chr(codepoint)}b.example/p?x=1#f"
+            for codepoint in range(0x80, 0xA000)
+        ]
+        inputs.extend(
+            f"https://{host}/p?x=1#f"
+            for host in (
+                "l·l.example",
+                "͵α.example",
+                "א׳.example",
+                "カ・ナ.example",
+                "١٢.example",
+                "۱۲.example",
+                "١۲.example",
+            )
+        )
+        payload = "".join(json.dumps(value) + "\n" for value in inputs)
+
+        with tempfile.TemporaryDirectory() as directory:
+            binary = Path(directory) / "canonical.test"
+            subprocess.run(
+                ["go", "test", "-c", "-o", str(binary), "./internal/canonical"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            environment = os.environ.copy()
+            environment["RECONCTX_DIFFERENTIAL_HELPER"] = "1"
+            process = subprocess.run(
+                [str(binary), "-test.run", "^TestURLDifferentialHelper$"],
+                input=payload,
+                capture_output=True,
+                text=True,
+                env=environment,
+                timeout=120,
+            )
+        self.assertEqual(process.returncode, 0, process.stderr or process.stdout)
+        responses = [
+            json.loads(line)
+            for line in process.stdout.splitlines()
+            if line.startswith("{")
+        ]
+        self.assertEqual(len(responses), len(inputs), process.stdout[-2000:])
+
+        differences = []
+        for raw_url, response in zip(inputs, responses, strict=True):
+            try:
+                expected = canonicalize_url(raw_url)
+                expected_error = False
+            except CanonicalizationError:
+                expected = None
+                expected_error = True
+            if response["error"] != expected_error or (
+                not expected_error and response.get("value") != expected
+            ):
+                differences.append(
+                    {
+                        "input": raw_url,
+                        "python_error": expected_error,
+                        "go_error": response["error"],
+                        "python_host": expected and expected["host"],
+                        "go_host": response.get("value", {}).get("host"),
+                    }
+                )
+                if len(differences) == 20:
+                    break
+        self.assertEqual(differences, [])
+
     def test_machine_readable_vectors_match_reference(self):
         vector_path = (
             Path(__file__).parents[1]
@@ -29,8 +107,7 @@ class CanonicalizationV0Tests(unittest.TestCase):
                         canonicalize_url(case["input"])
                     continue
                 actual = canonicalize_url(case["input"])
-                for key, expected in case["expected"].items():
-                    self.assertEqual(actual[key], expected)
+                self.assertEqual(actual, case["expected"])
 
     def test_lowercases_origin_removes_default_port_and_fragment(self):
         result = canonicalize_url(
@@ -83,9 +160,11 @@ class CanonicalizationV0Tests(unittest.TestCase):
         route = "https://example.com/users"
         known = endpoint_id("GET", route)
         unknown = endpoint_id(None, route)
+        literal_star = endpoint_id("*", route)
 
         self.assertRegex(known, r"^ep_sha256_[0-9a-f]{64}$")
         self.assertNotEqual(known, unknown)
+        self.assertNotEqual(literal_star, unknown)
 
     def test_parameter_identity_is_case_and_location_sensitive(self):
         endpoint = endpoint_id("POST", "https://example.com/users")

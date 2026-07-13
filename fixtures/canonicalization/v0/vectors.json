@@ -11,94 +11,309 @@
       "id": "lowercase-default-port-fragment-query-lossless",
       "input": "HTTP://Example.COM:80?b=2&a=1&a&empty=#section",
       "expected": {
+        "raw_url": "HTTP://Example.COM:80?b=2&a=1&a&empty=#section",
+        "scheme": "http",
+        "host": "example.com",
+        "port": null,
         "origin": "http://example.com",
         "path": "/",
+        "query_present": true,
+        "query_raw": "b=2&a=1&a&empty=",
+        "query_canonical": "b=2&a=1&a&empty=",
+        "query_pairs": [
+          {
+            "index": 0,
+            "raw_name": "b",
+            "raw_value": "2",
+            "name": "b",
+            "value": "2",
+            "has_equals": true
+          },
+          {
+            "index": 1,
+            "raw_name": "a",
+            "raw_value": "1",
+            "name": "a",
+            "value": "1",
+            "has_equals": true
+          },
+          {
+            "index": 2,
+            "raw_name": "a",
+            "raw_value": null,
+            "name": "a",
+            "value": null,
+            "has_equals": false
+          },
+          {
+            "index": 3,
+            "raw_name": "empty",
+            "raw_value": "",
+            "name": "empty",
+            "value": "",
+            "has_equals": true
+          }
+        ],
+        "fragment_present": true,
+        "fragment_raw": "section",
         "canonical_route_url": "http://example.com/",
         "canonical_observation_url": "http://example.com/?b=2&a=1&a&empty=",
-        "fragment_present": true,
-        "fragment_raw": "section"
+        "warnings": [
+          "fragment_removed"
+        ]
       }
     },
     {
       "id": "dot-segments-and-percent-encoding",
       "input": "https://EXAMPLE.com/a/./b/../%7euser/%2f?q=%7e+x%2f",
       "expected": {
+        "raw_url": "https://EXAMPLE.com/a/./b/../%7euser/%2f?q=%7e+x%2f",
+        "scheme": "https",
         "host": "example.com",
+        "port": null,
+        "origin": "https://example.com",
         "path": "/a/~user/%2F",
+        "query_present": true,
+        "query_raw": "q=%7e+x%2f",
         "query_canonical": "q=~+x%2F",
-        "canonical_observation_url": "https://example.com/a/~user/%2F?q=~+x%2F"
+        "query_pairs": [
+          {
+            "index": 0,
+            "raw_name": "q",
+            "raw_value": "%7e+x%2f",
+            "name": "q",
+            "value": "~+x%2F",
+            "has_equals": true
+          }
+        ],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://example.com/a/~user/%2F",
+        "canonical_observation_url": "https://example.com/a/~user/%2F?q=~+x%2F",
+        "warnings": []
       }
     },
     {
       "id": "path-case-repeated-and-trailing-slash-preserved",
       "input": "https://example.com/A//b/",
       "expected": {
+        "raw_url": "https://example.com/A//b/",
+        "scheme": "https",
+        "host": "example.com",
+        "port": null,
+        "origin": "https://example.com",
         "path": "/A//b/",
-        "canonical_route_url": "https://example.com/A//b/"
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://example.com/A//b/",
+        "canonical_observation_url": "https://example.com/A//b/",
+        "warnings": []
       }
     },
     {
       "id": "https-default-port-removed",
       "input": "https://example.com:443/login",
       "expected": {
+        "raw_url": "https://example.com:443/login",
+        "scheme": "https",
+        "host": "example.com",
         "port": null,
         "origin": "https://example.com",
-        "canonical_route_url": "https://example.com/login"
+        "path": "/login",
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://example.com/login",
+        "canonical_observation_url": "https://example.com/login",
+        "warnings": []
       }
     },
     {
       "id": "non-default-port-preserved",
       "input": "http://127.0.0.1:18080/api/search?q=fixture",
       "expected": {
+        "raw_url": "http://127.0.0.1:18080/api/search?q=fixture",
+        "scheme": "http",
         "host": "127.0.0.1",
         "port": 18080,
+        "origin": "http://127.0.0.1:18080",
+        "path": "/api/search",
+        "query_present": true,
+        "query_raw": "q=fixture",
+        "query_canonical": "q=fixture",
+        "query_pairs": [
+          {
+            "index": 0,
+            "raw_name": "q",
+            "raw_value": "fixture",
+            "name": "q",
+            "value": "fixture",
+            "has_equals": true
+          }
+        ],
+        "fragment_present": false,
+        "fragment_raw": null,
         "canonical_route_url": "http://127.0.0.1:18080/api/search",
-        "canonical_observation_url": "http://127.0.0.1:18080/api/search?q=fixture"
+        "canonical_observation_url": "http://127.0.0.1:18080/api/search?q=fixture",
+        "warnings": []
       }
     },
     {
       "id": "query-order-preserved",
       "input": "https://example.com/users?sort=asc&id=2&id=1",
       "expected": {
+        "raw_url": "https://example.com/users?sort=asc&id=2&id=1",
+        "scheme": "https",
+        "host": "example.com",
+        "port": null,
+        "origin": "https://example.com",
+        "path": "/users",
+        "query_present": true,
         "query_raw": "sort=asc&id=2&id=1",
         "query_canonical": "sort=asc&id=2&id=1",
-        "canonical_route_url": "https://example.com/users"
+        "query_pairs": [
+          {
+            "index": 0,
+            "raw_name": "sort",
+            "raw_value": "asc",
+            "name": "sort",
+            "value": "asc",
+            "has_equals": true
+          },
+          {
+            "index": 1,
+            "raw_name": "id",
+            "raw_value": "2",
+            "name": "id",
+            "value": "2",
+            "has_equals": true
+          },
+          {
+            "index": 2,
+            "raw_name": "id",
+            "raw_value": "1",
+            "name": "id",
+            "value": "1",
+            "has_equals": true
+          }
+        ],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://example.com/users",
+        "canonical_observation_url": "https://example.com/users?sort=asc&id=2&id=1",
+        "warnings": []
       }
     },
     {
       "id": "empty-query-distinct-in-observation",
       "input": "https://example.com/path?",
       "expected": {
+        "raw_url": "https://example.com/path?",
+        "scheme": "https",
+        "host": "example.com",
+        "port": null,
+        "origin": "https://example.com",
+        "path": "/path",
         "query_present": true,
         "query_raw": "",
         "query_canonical": "",
-        "canonical_observation_url": "https://example.com/path?"
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://example.com/path",
+        "canonical_observation_url": "https://example.com/path?",
+        "warnings": []
       }
     },
     {
       "id": "idna-and-utf8-path",
       "input": "https://BÜCHER.example/é",
       "expected": {
+        "raw_url": "https://BÜCHER.example/é",
+        "scheme": "https",
         "host": "xn--bcher-kva.example",
+        "port": null,
+        "origin": "https://xn--bcher-kva.example",
         "path": "/%C3%A9",
-        "canonical_route_url": "https://xn--bcher-kva.example/%C3%A9"
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://xn--bcher-kva.example/%C3%A9",
+        "canonical_observation_url": "https://xn--bcher-kva.example/%C3%A9",
+        "warnings": []
       }
     },
     {
       "id": "ipv6-compression",
       "input": "http://[2001:0db8::1]:80/a",
       "expected": {
+        "raw_url": "http://[2001:0db8::1]:80/a",
+        "scheme": "http",
         "host": "2001:db8::1",
+        "port": null,
         "origin": "http://[2001:db8::1]",
-        "canonical_route_url": "http://[2001:db8::1]/a"
+        "path": "/a",
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "http://[2001:db8::1]/a",
+        "canonical_observation_url": "http://[2001:db8::1]/a",
+        "warnings": []
       }
     },
     {
       "id": "gau-extensionless-path-retained",
       "input": "https://finance.fixture.test/",
       "expected": {
+        "raw_url": "https://finance.fixture.test/",
+        "scheme": "https",
+        "host": "finance.fixture.test",
+        "port": null,
+        "origin": "https://finance.fixture.test",
         "path": "/",
-        "canonical_route_url": "https://finance.fixture.test/"
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://finance.fixture.test/",
+        "canonical_observation_url": "https://finance.fixture.test/",
+        "warnings": []
+      }
+    },
+    {
+      "id": "all-trailing-host-dots-removed",
+      "input": "https://Example.COM../path",
+      "expected": {
+        "raw_url": "https://Example.COM../path",
+        "scheme": "https",
+        "host": "example.com",
+        "port": null,
+        "origin": "https://example.com",
+        "path": "/path",
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://example.com/path",
+        "canonical_observation_url": "https://example.com/path",
+        "warnings": []
       }
     },
     {
@@ -125,6 +340,107 @@
       "id": "invalid-port-rejected",
       "input": "https://example.com:99999/",
       "error": "port out of range"
+    },
+    {
+      "id": "backslash-rejected",
+      "input": "https://example.com\\path",
+      "error": "ambiguous slash"
+    },
+    {
+      "id": "control-character-rejected",
+      "input": "https://example.com/\u0001",
+      "error": "control character"
+    },
+    {
+      "id": "missing-host-rejected",
+      "input": "https:///path",
+      "error": "authority required"
+    },
+    {
+      "id": "invalid-idna-rejected",
+      "input": "https://-bad.example/",
+      "error": "invalid IDNA host"
+    },
+    {
+      "id": "short-numeric-ip-rejected",
+      "input": "http://127.1/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "integer-ip-rejected",
+      "input": "http://2130706433/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "octal-ip-rejected",
+      "input": "http://0177.0.0.1/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "hex-ip-rejected",
+      "input": "http://0x7f000001/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "malformed-fragment-percent-rejected",
+      "input": "https://example.com/#%ZZ",
+      "error": "invalid percent escape"
+    },
+    {
+      "id": "bracketed-reg-name-rejected",
+      "input": "http://[example.test]/",
+      "error": "bracketed authority requires IPv6"
+    },
+    {
+      "id": "bracketed-ipv4-rejected",
+      "input": "http://[127.0.0.1]/",
+      "error": "bracketed authority requires IPv6"
+    },
+    {
+      "id": "mapped-ideographic-numeric-ip-rejected",
+      "input": "http://127。1/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "mapped-fullwidth-numeric-ip-rejected",
+      "input": "http://127．1/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "mapped-halfwidth-numeric-ip-rejected",
+      "input": "http://127｡1/",
+      "error": "non-standard numeric IP"
+    },
+    {
+      "id": "mapped-leading-dot-rejected",
+      "input": "http://。example.com/",
+      "error": "invalid IDNA host"
+    },
+    {
+      "id": "idna-disallowed-symbol-rejected",
+      "input": "https://a¡b.example/",
+      "error": "invalid IDNA host"
+    },
+    {
+      "id": "unicode-capital-sharp-s-lowercased-before-uts46",
+      "input": "https://aẞb.example/",
+      "expected": {
+        "raw_url": "https://aẞb.example/",
+        "scheme": "https",
+        "host": "xn--ab-gia.example",
+        "port": null,
+        "origin": "https://xn--ab-gia.example",
+        "path": "/",
+        "query_present": false,
+        "query_raw": null,
+        "query_canonical": null,
+        "query_pairs": [],
+        "fragment_present": false,
+        "fragment_raw": null,
+        "canonical_route_url": "https://xn--ab-gia.example/",
+        "canonical_observation_url": "https://xn--ab-gia.example/",
+        "warnings": []
+      }
     }
   ]
 }

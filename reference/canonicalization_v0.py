@@ -105,13 +105,28 @@ def _remove_dot_segments(path: str) -> str:
     return output
 
 
+def _nonstandard_numeric_host(host: str) -> bool:
+    labels = host.split(".")
+    return all(
+        label.isdigit()
+        or (
+            label.lower().startswith("0x")
+            and len(label) > 2
+            and all(char in "0123456789abcdefABCDEF" for char in label[2:])
+        )
+        for label in labels
+    )
+
+
 def _canonical_host(host: str) -> tuple[str, bool]:
     host = unicodedata.normalize("NFC", host).rstrip(".")
-    if not host or "%" in host:
+    if not host or "%" in host or host[0] in ".。．｡":
         raise CanonicalizationError("invalid or empty host")
     try:
         ip = ipaddress.ip_address(host)
     except ValueError:
+        if _nonstandard_numeric_host(host):
+            raise CanonicalizationError("non-standard numeric IP address is forbidden")
         try:
             encoded = idna.encode(
                 host,
@@ -121,6 +136,17 @@ def _canonical_host(host: str) -> tuple[str, bool]:
             ).decode("ascii")
         except idna.IDNAError as exc:
             raise CanonicalizationError(f"invalid IDNA host: {exc}") from exc
+        encoded = encoded.rstrip(".")
+        if not encoded or encoded.startswith(".") or ".." in encoded:
+            raise CanonicalizationError("invalid IDNA host")
+        try:
+            ipaddress.ip_address(encoded)
+        except ValueError:
+            pass
+        else:
+            raise CanonicalizationError("mapped numeric IP address is forbidden")
+        if _nonstandard_numeric_host(encoded):
+            raise CanonicalizationError("non-standard numeric IP address is forbidden")
         return encoded.lower(), False
     return ip.compressed.lower(), ip.version == 6
 
@@ -202,6 +228,8 @@ def canonicalize_url(raw_url: str) -> dict:
     route = origin + path
     observation = route + ("?" + canonical_query if query_present else "")
     fragment_present = "#" in raw_url
+    if fragment_present:
+        _normalize_percent_component(parsed.fragment, _QUERY_COMPONENT_SAFE, "fragment")
 
     return {
         "raw_url": raw_url,
@@ -273,6 +301,8 @@ def _stable_hash(prefix: str, *components: str) -> str:
 def endpoint_id(method: str | None, raw_or_route_url: str) -> str:
     route = canonicalize_url(raw_or_route_url)["canonical_route_url"]
     canonical_method = "*" if method is None else _http_method(method)
+    if method is not None and canonical_method == "*":
+        canonical_method = r"\*"
     return _stable_hash("ep", canonical_method, route)
 
 
