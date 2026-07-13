@@ -1,0 +1,6 @@
+mode: allowlist
+roots:
+  - id: loopback-origin
+    kind: origin
+    value: http://127.0.0.1:18080
+external_policy: reject

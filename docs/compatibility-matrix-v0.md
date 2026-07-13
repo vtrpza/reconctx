@@ -7,9 +7,19 @@
 | Component | Verified environment | MVP support decision |
 |---|---|---|
 | OS | Parrot/Linux amd64 | Linux-first |
-| Production CLI | Go decision validated by spike | Go; exact minimum version set during implementation |
+| Production CLI | Go 1.24.4 | Go 1.24+; Linux-first |
 | Reference tooling | Python 3.13.5 | development/fixtures only |
 | Agent runtime integration | none | explicitly out of scope |
+
+## Pinned implementation dependencies
+
+| Dependency | Version | Purpose | License reviewed |
+|---|---:|---|---|
+| `golang.org/x/net` | 0.48.0 | UTS #46 / IDNA processing | BSD-3-Clause |
+| `golang.org/x/text` | 0.32.0 | Unicode case mapping and NFC | BSD-3-Clause |
+| `golang.org/x/sys` | 0.41.0 | Linux `openat2` and `renameat2` | BSD-3-Clause |
+| `go.yaml.in/yaml/v3` | 3.0.4 | strict operator-facing YAML | MIT / Apache-2.0 |
+| Python `idna` | 3.4 | Unicode 15 oracle used only by tests | BSD-3-Clause |
 
 ## Recon tools
 
@@ -23,8 +33,8 @@
 
 | Contract | Version | State |
 |---|---|---|
-| Normalized records | `reconctx/v0` | Draft 2020-12 schemas and 45-test reference suite validated |
-| URL canonicalization | `url-canonicalization/v0` | executable vectors validated |
+| Normalized records | `reconctx/v0` | Draft 2020-12 schemas and 46-test reference suite validated |
+| URL canonicalization | `url-canonicalization/v0` | executable vectors plus direct Go↔Python differential gate validated |
 | Agent view | `reconctx-agent-view/v0` | deterministic derived projection; non-authoritative |
 | Handoff manifest | `reconctx/v0` | checksums and cross-references validated |
 | BBOT importer | planned after first vertical slice | no runtime validation yet |
