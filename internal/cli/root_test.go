@@ -56,3 +56,14 @@ func TestRootUnknownCommand(t *testing.T) {
 		t.Fatalf("stderr = %q", got)
 	}
 }
+
+func TestRootRejectsImplicitApprovalFlag(t *testing.T) {
+	t.Parallel()
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"--yes"}, &stdout, &stderr); code != 2 {
+		t.Fatalf("exit code = %d, want 2", code)
+	}
+	if stdout.Len() != 0 {
+		t.Fatalf("stdout = %q, want empty", stdout.String())
+	}
+}
