@@ -1,0 +1,49 @@
+package model
+
+type Plan struct {
+	PlanVersion            string      `json:"plan_version"`
+	RunID                  string      `json:"run_id"`
+	CreatedAt              string      `json:"created_at"`
+	Inputs                 PlanInputs  `json:"inputs"`
+	CanonicalizationPolicy string      `json:"canonicalization_policy"`
+	SchemaVersion          string      `json:"schema_version"`
+	Tools                  []ToolPlan  `json:"tools"`
+	Limits                 PlanLimits  `json:"limits"`
+	EnvironmentAllowlist   []string    `json:"environment_allowlist"`
+	WorkspaceRoot          string      `json:"workspace_root"`
+	Display                PlanDisplay `json:"-"`
+}
+
+type PlanInputs struct {
+	Target      string   `json:"target"`
+	Seeds       []string `json:"seeds"`
+	ScopePath   string   `json:"scope_path"`
+	ScopeSHA256 string   `json:"scope_sha256"`
+	Profile     string   `json:"profile"`
+}
+
+type ToolPlan struct {
+	Name          string     `json:"name"`
+	ResolvedPath  string     `json:"resolved_path"`
+	Version       string     `json:"version"`
+	ActivityClass string     `json:"activity_class"`
+	Argv          []string   `json:"argv"`
+	Limits        ToolLimits `json:"limits"`
+	OutputPaths   []string   `json:"output_paths"`
+}
+
+type ToolLimits struct {
+	RatePerSecond  int `json:"rate_limit_per_second"`
+	Concurrency    int `json:"concurrency"`
+	Parallelism    int `json:"parallelism"`
+	TimeoutSeconds int `json:"timeout_seconds"`
+}
+
+type PlanLimits struct {
+	ArjunMaxTargets int `json:"arjun_max_targets"`
+}
+
+type PlanDisplay struct {
+	Title         string
+	TerminalStyle string
+}
