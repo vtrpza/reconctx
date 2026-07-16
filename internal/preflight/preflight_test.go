@@ -70,6 +70,9 @@ func TestPreflightRejectsWritableTool(t *testing.T) {
 	if err := os.WriteFile(tool, []byte("#!/bin/sh\nexit 0\n"), 0o722); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.Chmod(tool, 0o722); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := ResolveTool(tool); err == nil {
 		t.Fatal("ResolveTool accepted a group/world-writable tool")
 	}
