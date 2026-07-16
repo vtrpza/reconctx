@@ -2,86 +2,159 @@
 
 > Evidence, not terminal noise.
 
-`reconctx` is an operator-controlled reconnaissance evidence compiler. It supervises bounded GAU, Katana, and Arjun runs, preserves native evidence, normalizes observations without erasing provenance, and builds portable handoffs for downstream analysis.
+`reconctx` turns bounded GAU, Katana, and Arjun collection into a portable, checksummed handoff for human or agent analysis. Native artifacts stay traceable, normalized facts keep their provenance, and incomplete coverage stays incomplete.
 
-## Release status
+The operator owns every network decision. A downstream agent receives files—not scanner control.
 
-The first release target is **v0.1.0 for Linux amd64**. The implementation is being prepared as a local release candidate; publication waits for every applicable pre-publication item in the [release checklist](docs/release-checklist.md) and explicit approval of the exact artifact set.
+**Release candidate:** v0.1.0 for Linux amd64 · GAU 2.2.4 · Katana v1.6.1 · Arjun 2.2.7 · Apache-2.0
 
-The supported external tool contracts are pinned to:
+G4 operator acceptance passed. No public tag or release exists yet; the final artifact set and independent review remain pending.
 
-- GAU 2.2.4;
-- Katana v1.6.1;
-- Arjun 2.2.7.
+[Inspect a complete sanitized handoff](examples/handoff-web-blackbox-v0/CONTEXT.md) · [CLI contract](docs/cli.md) · [Threat model](docs/threat-model.md)
 
-These tools are not bundled. Other versions are unsupported until their native output and failure behavior are covered by fixtures.
+## See the result before running anything
 
-## Workflow
+```bash
+(cd examples/handoff-web-blackbox-v0 && sha256sum -c checksums.sha256)
+sed -n '1,160p' examples/handoff-web-blackbox-v0/CONTEXT.md
+```
+
+The example is deterministic and generated only from sanitized fixtures. `CONTEXT.md` is the factual front door; JSONL projections support machines and agents; Evidence locators, a manifest, and checksums support independent verification.
 
 ```text
-plan -> decision A -> bounded GAU/Katana capture
-     -> offline normalization -> deterministic Arjun queue
-     -> decision B -> bounded Arjun capture or explicit skip
-     -> offline build -> CONTEXT.md + normalized records + Evidence map
+handoff/<run-id>/
+├── CONTEXT.md                 # compact, evidence-linked surface
+├── manifest.json
+├── checksums.sha256
+├── normalized/
+│   ├── records.jsonl          # complete normalized record stream
+│   ├── agent-view.jsonl       # deterministic compact projection
+│   └── *.jsonl                # typed views and Evidence index
+└── raw/                       # optional admitted native bytes; review before sharing
 ```
 
-Both active-phase decisions are bound to the full `sha256:<64 lowercase hex characters>` digest displayed by the CLI. There is no implicit or non-interactive approval flag. Any behavior drift invalidates an approval.
+The handoff is readable without `reconctx` or the scanners installed.
 
-## Quick start
+## Control flow
 
-Build the local CLI:
-
-```bash
-go build -o build/reconctx ./cmd/reconctx
-build/reconctx --version
+```text
+plan (offline)
+  → approve exact collection digest
+  → bounded GAU provider query + bounded Katana crawl
+  → normalize, scope, correlate, and rank offline
+  → decide on the exact Arjun queue digest
+      ├ approve → bounded Arjun execution → compile offline
+      ├ skip    → compile partial with an explicit gap
+      └ cancel  → stop
 ```
 
-Create a strict scope document, then render a plan:
+| Command | Scanner or provider traffic |
+|---|---|
+| `plan` | None. Validates inputs and reads bounded tool metadata without starting a scanner. |
+| `run` | Only after an operator at a terminal enters the full displayed digest. |
+| `resume` | Only from supported checkpoints, with a fresh approval when activity can resume. |
+| `build` | None. Reads persisted evidence and never resolves or launches a scanner. |
+
+There is no `--yes`, agent approval path, daemon, MCP server, or runtime callback. Drift in the digest-bound plan or queue, or in a revalidated tool identity, invalidates the decision.
+
+## Run the owned loopback demo
+
+Requirements: Linux amd64, Go 1.24+, and the exact scanner versions listed above. Scanner binaries are not bundled and must be trusted by the operator. A source build reports `0.0.0-dev`; release binaries receive their version at build time.
+
+Even this loopback run can contact GAU's pinned external providers. Review the rendered plan and approve only the traffic you intend to authorize.
+
+Terminal 1:
 
 ```bash
-build/reconctx plan \
-  --target fixture.test \
-  --seed http://fixture.test:18080/ \
-  --scope scope.yaml \
-  --wordlist /absolute/private/params.txt \
+python3 -m fixture_target.app --host 127.0.0.1 --port 18080
+```
+
+Terminal 2:
+
+```bash
+go build -o ./reconctx ./cmd/reconctx
+WORKSPACE="$(mktemp -d /tmp/reconctx-demo.XXXXXX)"
+
+./reconctx plan \
+  --target 127.0.0.1 \
+  --seed http://127.0.0.1:18080/ \
+  --scope examples/scope.yaml \
+  --wordlist fixtures/shared/arjun-minimal.txt \
   --profile web-blackbox \
-  --workspace /absolute/private/reconctx-work \
-  --out run-plan.json
+  --workspace "$WORKSPACE" \
+  --out "$WORKSPACE/plan.json"
+
+./reconctx run --out handoff/demo "$WORKSPACE/plan.json"
+
+(cd "$WORKSPACE/handoff/demo" && sha256sum -c checksums.sha256)
+sed -n '1,180p' "$WORKSPACE/handoff/demo/CONTEXT.md"
 ```
 
-Run, resume, and compile only after reviewing the rendered paths, versions, hashes, arguments, scope, limits, and output roots:
+At each approval gate, inspect the displayed scope, tool identities, hashes, arguments, environment, limits, queue, and output paths. Enter the exact decision plus the full digest, then the private operator label. Stop the fixture with `Ctrl+C` after the run.
+
+`run` already compiles the handoff. `resume` continues only supported approval/compile checkpoints or verifies a successful handoff; custom output paths must be repeated. `build` is an offline rebuild and requires a new output path:
 
 ```bash
-build/reconctx run /absolute/private/reconctx-work/run-plan.json
-build/reconctx resume --workspace /absolute/private/reconctx-work RUN_ID
-build/reconctx build --workspace /absolute/private/reconctx-work --run RUN_ID --out handoff/RUN_ID
+./reconctx resume \
+  --workspace "$WORKSPACE" \
+  --out handoff/demo \
+  RUN_ID
+
+./reconctx build \
+  --workspace "$WORKSPACE" \
+  --run RUN_ID \
+  --out handoff/verify-RUN_ID
 ```
 
-`plan` performs non-executing, bounded version-metadata preflight. `run` and `resume` can create approved network traffic; `resume` only continues approval checkpoints and rejects unsafe in-flight or terminal states. `build` is offline and never launches scanners. See the complete [CLI contract](docs/cli.md).
+For authorized non-fixture targets, create a matching strict scope document and use an absolute operator-owned private workspace. Read the [complete CLI contract](docs/cli.md) before active use.
 
-## Evidence model
+## Evidence semantics
 
-`reconctx` keeps three layers separate:
+Every evidence-bearing observation resolves to an Evidence ID, an artifact SHA-256, and a native locator such as a line range or JSON Pointer.
 
-1. native artifacts and immutable execution evidence;
-2. normalized entities, observations, and relationships;
-3. derived compact views for agents and humans.
+`reconctx` deliberately keeps these meanings separate:
 
-Every material handoff claim should resolve to an Evidence ID and native locator. Historical URLs are not presented as currently observed. Parameter candidates are not findings. Missing and partial coverage is explicit.
+- a GAU URL is historical, not proof of current reachability;
+- an HTTP response was observed only during the recorded run;
+- an Arjun parameter is a candidate, not a finding;
+- a bounded zero result is not proof of universal absence;
+- process completion and semantic coverage are different states;
+- timeout, interruption, truncation, unsupported output, and operator skip remain explicit gaps.
 
-## Safety boundaries
+Raw occurrences are preserved even when canonical entities deduplicate them. Exit code `0` alone never establishes complete coverage.
 
-- CI and normal tests never run GAU, Katana, Arjun, or another scanner.
-- Active execution requires a reviewed plan, bounded scope and limits, an interactive terminal, and an exact digest approval.
+## Security boundaries
+
+- Strict scope and fixed rate, concurrency, parallelism, timeout, and target ceilings constrain active scheduling.
+- Collection and Arjun decisions bind behavior-bearing state to full SHA-256 digests.
+- Preflight binds supported tool versions, executable SHA-256, filesystem identity, paths, and effective environment; drift fails closed.
+- Subprocesses receive argument vectors without shell interpolation, a private approved `HOME`, bounded captures, and process-group containment.
 - Target and tool output is untrusted data, never instructions.
-- Private raw evidence stays private and immutable; public fixtures are separately sanitized.
-- The agent and offline compiler have no active execution path.
+- `reconctx` assumes trusted tools; it is not a sandbox for a hostile scanner binary. URL scope also cannot eliminate DNS rebinding or unsafe internal scanner behavior.
+- Admitted raw bytes may be copied into the handoff. Secret scanning is heuristic, so a human must review every handoff before sharing it.
+- No disk quota or free-space preflight exists; operators must choose and monitor workspace capacity.
 
-See [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), and the [fixture policy](docs/fixture-policy.md).
+See [SECURITY.md](SECURITY.md), the [scope contract](docs/scope-v0.md), the [compatibility matrix](docs/compatibility-matrix-v0.md), and the [security test matrix](docs/security-test-matrix.md).
 
-## Validation
+## Proof, not promise
+
+The accepted v0.1.0 loopback run ended `partial`—correctly preserving GAU, Katana, and Arjun coverage gaps instead of claiming completeness. Independent validation accepted all 62 schema-valid records and resolved every record, artifact, and Evidence reference. All 32 checksum entries passed, and two additional offline builds were byte-identical to the original handoff. The exact candidate, tool hashes, approval digests, decisions, and results are in the [G4 acceptance record](docs/g4-acceptance-v0.1.0.md).
+
+In the repository fixture benchmark, one 7,064-byte `CONTEXT.md` answered all 10 protocol questions without drill-down, using 89.8% fewer source bytes than the normalized stream; all 15 cited Evidence IDs resolved. This measures that fixture and protocol, not scanner coverage or model quality. See the [agent handoff benchmark](benchmarks/agent-handoff-v1.md).
+
+## Deliberate boundaries
+
+v0.1.0 supports Linux amd64 and only the pinned tool contracts above. It does not perform exploitation, generate findings or severity, ingest authenticated HAR/Burp data, import BBOT, run autonomously, expose a dashboard, or distribute execution.
+
+Arjun's private Python environment must remain immutable between planning and execution; v0.1.0 does not hash the entire environment closure. Supporting another platform or scanner version requires captured behavior, sanitized fixtures, adapter and failure-path tests, and renewed acceptance where process semantics change.
+
+## Develop and verify
 
 ```bash
+python3 -m venv .tools/schema-venv
+.tools/schema-venv/bin/python -m pip install \
+  --require-hashes --requirement requirements-dev.lock
+
 go test ./...
 go test -race ./...
 go vet ./...
@@ -89,14 +162,6 @@ go vet ./...
 (cd examples/handoff-web-blackbox-v0 && sha256sum -c checksums.sha256)
 ```
 
-The repository CI also verifies fixture checksums, deterministic reference regeneration, module tidiness, and two byte-identical static Linux amd64 builds.
+CI performs the core checks, validates fixture/reference determinism, and compares two static Linux amd64 builds. CI and normal tests never launch real scanners. Contribution rules and fixture hygiene are in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-## Scope of v0.1.0
-
-The first release deliberately excludes autonomous scanning, exploitation, finding/severity generation, authenticated HAR/Burp workflows, BBOT import, dashboards, daemons, distributed execution, and non-Linux process semantics.
-
-Discovery contracts and design evidence remain available under `docs/`, `benchmarks/`, `fixtures/`, and `examples/`. Current implementation and gate status is recorded in [docs/discovery-status.md](docs/discovery-status.md).
-
-## License
-
-Apache License 2.0. See [LICENSE](LICENSE).
+Licensed under the [Apache License 2.0](LICENSE).
