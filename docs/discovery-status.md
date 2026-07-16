@@ -16,7 +16,7 @@ The discovery contracts have moved into a production Go implementation. The rema
 | G1 — foundations | CLI skeleton, canonical JSON/URL, strict scope, private workspace, preflight, digest approvals | Implemented; full local automated verification passed |
 | G2 — supervised execution | Fake-tool process containment, immutable capture, bounded output, timeout/interruption semantics | Implemented; full local test/race/vet verification passed |
 | G3 — adapters and compiler | All public tool fixtures, deterministic queue, integrity checks, portable deterministic handoff | Implemented; full local Python/checksum/reference/fuzz verification passed |
-| G4 — operator acceptance | One explicitly approved bounded loopback run through both approval gates | Pending operator execution |
+| G4 — operator acceptance | One explicitly approved bounded loopback run through both approval gates | Passed; [signed record](g4-acceptance-v0.1.0.md) |
 | G5 — release/publication | Reproducible artifacts, hashes, SBOM/licenses, security matrix, clean-tree review, explicit publication approval | Dirty-tree review artifacts generated; clean candidate, independent review, and publication approval remain pending |
 
 ## Implemented release surface
@@ -46,8 +46,7 @@ No external scan is authorized by the release work. CI and normal tests use fixt
 ## Remaining first-release gates
 
 1. Repeat and retain the green automated verification in the release test log at the exact clean candidate commit.
-2. Have the operator execute and sign G4 against the owned loopback fixture target only.
-3. Regenerate the Linux amd64 binary, checksum, SPDX SBOM, third-party license inventory, and test log from the exact clean candidate, then obtain independent review.
-4. Review the sanitized tree and dynamic limitations, then obtain explicit artifact-specific G5 publication approval.
+2. Regenerate the Linux amd64 binary, checksum, SPDX SBOM, third-party license inventory, and test log from the exact clean candidate, then obtain independent review.
+3. Review the sanitized tree and dynamic limitations, then obtain explicit artifact-specific G5 publication approval.
 
 Historical discovery evidence remains in `docs/product-contract.md`, `docs/product-decisions-v0.md`, `docs/pipeline-v0.md`, `docs/threat-model.md`, `docs/tool-contract-matrix-v0.md`, `docs/failure-path-capture-preview-v0.md`, and `benchmarks/`. Test counts and timestamps in historical captures describe those captures only; current gates are command- and artifact-based.

@@ -1,6 +1,6 @@
 # Pipeline DAG and Approval Semantics v0
 
-**Status:** implemented v0.1 contract; operator acceptance and publication remain pending
+**Status:** implemented v0.1 contract; operator acceptance passed and publication remains pending
 **Profile:** `web-blackbox`  
 **Control mode:** operator-run artifact producer  
 **Approved decisions:** `docs/product-decisions-v0.md`
@@ -477,4 +477,4 @@ Pipeline/approval gate is closed when:
 - no agent control plane exists;
 - active discovery execution remains operator-controlled.
 
-G1–G3 implementation is present. G4 operator loopback acceptance and G5 artifact-specific publication approval remain open; this document does not authorize either gate.
+G1–G3 implementation is present and [G4 operator loopback acceptance](g4-acceptance-v0.1.0.md) passed. G5 artifact-specific publication approval remains open; this document does not authorize publication.

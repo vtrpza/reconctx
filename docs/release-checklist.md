@@ -2,7 +2,7 @@
 
 This checklist produces a reviewable **local** Linux amd64 candidate. It does not authorize tagging, pushing, uploading, or publishing. Run it from a clean checkout at the exact candidate commit and save command output in `dist/release-test-results.txt`.
 
-Local verification on 2026-07-16 passed the full Go test and race suites, `go vet`, the Python suite, fixture/example checksums, deterministic reference regeneration, and all three required 30-second fuzz runs. A reproducible dirty-tree review binary, checksum, SPDX SBOM, license inventory, and test log were also regenerated. These results do not replace the clean-candidate rerun or close G4, independent artifact/SBOM review, or G5.
+Local verification on 2026-07-16 passed the full Go test and race suites, `go vet`, the Python suite, fixture/example checksums, deterministic reference regeneration, and all three required 30-second fuzz runs. A reproducible dirty-tree review binary, checksum, SPDX SBOM, license inventory, and test log were also regenerated. [G4 operator acceptance](g4-acceptance-v0.1.0.md) is recorded; these results do not replace the clean-candidate rerun, independent artifact/SBOM review, or G5.
 
 ## 1. Preconditions and closed gates
 
@@ -10,7 +10,7 @@ Local verification on 2026-07-16 passed the full Go test and race suites, `go ve
 - [ ] G1–G3 changes are code-reviewed and all automated checks below pass.
 - [x] `requirements-dev.lock` contains verified wheel hashes and an offline installation succeeded with `--require-hashes`.
 - [x] Required `Fuzz*` entry points cover canonicalization, native parsers, and managed/rooted path handling.
-- [ ] G4 operator acceptance is signed for one bounded owned-loopback run through both approval gates.
+- [x] G4 operator acceptance is signed for one bounded owned-loopback run through both approval gates.
 - [ ] The worktree contains no private captures, credentials, scanner binaries, caches, virtual environments, or unrelated generated files.
 - [ ] `CHANGELOG.md`, `SECURITY.md`, the compatibility matrix, and dynamic limitations match the candidate.
 
@@ -85,7 +85,7 @@ The operator, not an agent or CI job, performs this gate against the owned loopb
 6. Confirm descendants are gone, the loopback port is closed, partial semantics are correct, and private raws remain private.
 7. Build twice offline and verify deterministic, schema-valid, checksummed handoffs whose material claims resolve to Evidence IDs.
 
-- [ ] The signed record includes candidate commit, binary SHA-256, tool identities, plan/queue digests, exact decisions, timestamps, results, and reviewer.
+- [x] The [signed record](g4-acceptance-v0.1.0.md) includes candidate commit, binary SHA-256, tool identities, plan/queue digests, exact decisions, timestamps, results, and reviewer.
 
 ## 5. Reproducible Linux amd64 artifact
 
