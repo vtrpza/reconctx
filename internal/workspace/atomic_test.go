@@ -121,6 +121,18 @@ func TestReplaceFileCannotOverwriteFinalizedArtifact(t *testing.T) {
 	}
 }
 
+func TestAtomicWritesRejectUnreadableSize(t *testing.T) {
+	t.Parallel()
+	root := openTestRoot(t, t.TempDir())
+	tooLarge := make([]byte, MaxFileBytes+1)
+	if err := root.WriteFileExclusive("raw/large", tooLarge); !errors.Is(err, ErrTooLarge) {
+		t.Fatalf("exclusive write error = %v, want ErrTooLarge", err)
+	}
+	if err := root.ReplaceFile("state/large", tooLarge); !errors.Is(err, ErrTooLarge) {
+		t.Fatalf("replace error = %v, want ErrTooLarge", err)
+	}
+}
+
 func assertNoTemporaryFiles(t *testing.T, directory string) {
 	t.Helper()
 	entries, err := os.ReadDir(directory)

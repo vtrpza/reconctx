@@ -5,9 +5,13 @@ package workspace
 import (
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
+
+	"github.com/vtrpza/reconctx/internal/integrity"
 )
 
 func TestRootRejectsTraversalAndSymlinks(t *testing.T) {
@@ -127,7 +131,7 @@ func TestReadFileRejectsOversizeInput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := file.Truncate(maxReadFileBytes + 1); err != nil {
+	if err := file.Truncate(MaxFileBytes + 1); err != nil {
 		_ = file.Close()
 		t.Fatal(err)
 	}
@@ -169,6 +173,49 @@ func TestRootFailsIfPermissionsBecomePublic(t *testing.T) {
 	if err := root.MkdirAll("runs"); !errors.Is(err, ErrUnsafePermissions) {
 		t.Fatalf("MkdirAll error = %v, want ErrUnsafePermissions", err)
 	}
+}
+
+func FuzzManagedIntegrityPaths(f *testing.F) {
+	for _, seed := range []string{
+		"runs/run_test/native-output.json",
+		"normalized/arjun-candidates.jsonl",
+		"..",
+		"../escape",
+		"/absolute",
+		"a//b",
+		"a\\b",
+		"line\nbreak",
+		"a/../../b",
+	} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, name string) {
+		if len(name) > 4<<10 {
+			return
+		}
+		managedErr, managedAgain := validateManagedPath(name), validateManagedPath(name)
+		integrityErr, integrityAgain := integrity.ValidateRelativePath(name), integrity.ValidateRelativePath(name)
+		if !samePathError(managedErr, managedAgain) || !samePathError(integrityErr, integrityAgain) {
+			t.Fatalf("path validation was non-deterministic for %q", name)
+		}
+		if managedErr == nil {
+			if name == "" || path.IsAbs(name) || path.Clean(name) != name || strings.ContainsAny(name, "\\\x00") {
+				t.Fatalf("managed validator accepted unsafe path %q", name)
+			}
+			for _, component := range strings.Split(name, "/") {
+				if component == "" || component == "." || component == ".." {
+					t.Fatalf("managed validator accepted unsafe component in %q", name)
+				}
+			}
+		}
+		if integrityErr == nil && managedErr != nil {
+			t.Fatalf("public-integrity path was not a valid managed path: %q", name)
+		}
+	})
+}
+
+func samePathError(first, second error) bool {
+	return first == nil && second == nil || first != nil && second != nil && first.Error() == second.Error()
 }
 
 func openTestRoot(t *testing.T, directory string) *Root {

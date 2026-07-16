@@ -80,7 +80,7 @@ The threshold is intentionally strict. Execution breadth does not compensate for
 | AC-004 | historical versus current observations | 0.5 | 0.0 | BBOT event type/module/tags can support mapping; reconFTW aggregation generally flattens source semantics |
 | AC-005 | no destructive deduplication | 0.5 | 0.0 | BBOT UUID/graph is useful but internal dedup/collapse semantics differ; reconFTW uses append/deduped flat lists |
 | AC-006 | explicit scope enforcement | 1.0 | 0.5 | BBOT has targets, seeds, blacklist and scope distance; reconFTW has scope filters but less explicit per-observation scope provenance |
-| AC-007 | second approval for exact Arjun queue | 0.0 | 0.0 | neither implements the required operator-editable queue gate |
+| AC-007 | second decision for exact Arjun queue | 0.0 | 0.0 | neither implements the required digest-bound approve/skip/cancel queue gate |
 | AC-008 | deterministic bounded candidate phase | 0.5 | 0.5 | both offer limits/config; neither emits our ranked queue, reasons and approval digest |
 | AC-009 | partial success with explicit coverage gaps | 0.5 | 0.5 | both continue across failures; neither directly supplies our exit/semantic/coverage separation |
 | AC-010 | cancellation plus recoverable partial evidence | 0.5 | 0.5 | both have lifecycle/cleanup mechanisms; reconctx still needs process-group and immutable-artifact guarantees |

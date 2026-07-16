@@ -2,98 +2,101 @@
 
 > Evidence, not terminal noise.
 
-`reconctx` is an operator-controlled reconnaissance evidence compiler. It preserves native tool evidence, normalizes observations without erasing provenance, and builds compact, portable handoffs for downstream analysis.
+`reconctx` is an operator-controlled reconnaissance evidence compiler. It supervises bounded GAU, Katana, and Arjun runs, preserves native evidence, normalizes observations without erasing provenance, and builds portable handoffs for downstream analysis.
 
-## Status
+## Release status
 
-**Pre-implementation discovery.** The production runner does not exist yet and no production use is supported.
+The first release target is **v0.1.0 for Linux amd64**. The implementation is being prepared as a local release candidate; publication waits for every applicable pre-publication item in the [release checklist](docs/release-checklist.md) and explicit approval of the exact artifact set.
 
-Validated so far:
+The supported external tool contracts are pinned to:
 
-- GAU 2.2.4, Katana v1.6.1 and Arjun 2.2.7 fixture contracts;
-- `reconctx/v0` JSON Schemas and URL canonicalization;
-- deterministic fixture-derived handoff and compact agent view;
-- two digest-bound operator approval gates;
-- process-control spikes in Go and Python;
-- Go selected for the production CLI;
-- independent compiler-first architecture; BBOT importer planned later.
+- GAU 2.2.4;
+- Katana v1.6.1;
+- Arjun 2.2.7.
 
-See `docs/discovery-status.md` for current blockers.
+These tools are not bundled. Other versions are unsupported until their native output and failure behavior are covered by fixtures.
 
-## Thesis
-
-Recon tools produce useful data, but their outputs commonly lose context when flattened into terminal logs or deduplicated lists. `reconctx` keeps three layers separate:
-
-1. native artifacts and immutable execution evidence;
-2. normalized entities, observations and relationships;
-3. derived compact views for agents and humans.
-
-Every material handoff claim should resolve to an Evidence ID and native locator. Historical URLs are not presented as currently observed. Parameter candidates are not findings. Missing coverage is explicit.
-
-## Intended workflow
+## Workflow
 
 ```text
-plan → operator approval A → bounded GAU/Katana capture
-     → offline normalize → deterministic Arjun candidate queue
-     → operator approval B → bounded Arjun capture
-     → offline compile → CONTEXT.md + normalized records + Evidence map
+plan -> decision A -> bounded GAU/Katana capture
+     -> offline normalization -> deterministic Arjun queue
+     -> decision B -> bounded Arjun capture or explicit skip
+     -> offline build -> CONTEXT.md + normalized records + Evidence map
 ```
 
-The operator executes all active tools. Compilation, import, validation and handoff generation remain offline.
+Both active-phase decisions are bound to the full `sha256:<64 lowercase hex characters>` digest displayed by the CLI. There is no implicit or non-interactive approval flag. Any behavior drift invalidates an approval.
 
-## Non-goals for the MVP
+## Quick start
 
-- autonomous or agent-controlled scanning;
-- exploitation or vulnerability validation;
-- automatic findings, severity or confidence scoring;
-- broad scanner orchestration comparable to reconFTW;
-- dashboard/plugin ecosystem;
-- distributed execution;
-- mandatory SaaS services;
-- Windows/macOS support;
-- authenticated HAR/Burp workflows in the first slice.
+Build the local CLI:
 
-## Discovery artifacts
+```bash
+go build -o build/reconctx ./cmd/reconctx
+build/reconctx --version
+```
 
-- Product contract: `docs/product-contract.md`
-- Approved decisions: `docs/product-decisions-v0.md`
-- Pipeline and approvals: `docs/pipeline-v0.md`
-- Threat model: `docs/threat-model.md`
-- Tool contracts: `docs/tool-contract-matrix-v0.md`
-- Canonicalization: `docs/url-canonicalization-v0.md`
-- Schema: `docs/schema-v0.md`, `schemas/v0/`
-- Stack ADR: `docs/adr/0001-language-and-distribution.md`
-- Agent benchmarks: `benchmarks/agent-handoff-v0.md`, `benchmarks/agent-handoff-v1.md`
-- Competitive baseline: `docs/competitive-baseline-v0.md`
-- Fixture policy: `docs/fixture-policy.md`
-- Compatibility matrix: `docs/compatibility-matrix-v0.md`
-- Failure-path preview: `docs/failure-path-capture-preview-v0.md`
-- Example handoff: `examples/handoff-web-blackbox-v0/`
-- Final implementation plan: `.hermes/plans/2026-07-13_002250-reconctx-mvp-implementation.md`
+Create a strict scope document, then render a plan:
 
-`examples/handoff-web-blackbox-v0/` is the immutable input snapshot used by benchmark v1. Its recorded gaps describe that run at build time; current fixture coverage is tracked by `docs/discovery-status.md` and `docs/compatibility-matrix-v0.md`.
+```bash
+build/reconctx plan \
+  --target fixture.test \
+  --seed http://fixture.test:18080/ \
+  --scope scope.yaml \
+  --wordlist /absolute/private/params.txt \
+  --profile web-blackbox \
+  --workspace /absolute/private/reconctx-work \
+  --out run-plan.json
+```
+
+Run, resume, and compile only after reviewing the rendered paths, versions, hashes, arguments, scope, limits, and output roots:
+
+```bash
+build/reconctx run /absolute/private/reconctx-work/run-plan.json
+build/reconctx resume --workspace /absolute/private/reconctx-work RUN_ID
+build/reconctx build --workspace /absolute/private/reconctx-work --run RUN_ID --out handoff/RUN_ID
+```
+
+`plan` performs non-executing, bounded version-metadata preflight. `run` and `resume` can create approved network traffic; `resume` only continues approval checkpoints and rejects unsafe in-flight or terminal states. `build` is offline and never launches scanners. See the complete [CLI contract](docs/cli.md).
+
+## Evidence model
+
+`reconctx` keeps three layers separate:
+
+1. native artifacts and immutable execution evidence;
+2. normalized entities, observations, and relationships;
+3. derived compact views for agents and humans.
+
+Every material handoff claim should resolve to an Evidence ID and native locator. Historical URLs are not presented as currently observed. Parameter candidates are not findings. Missing and partial coverage is explicit.
+
+## Safety boundaries
+
+- CI and normal tests never run GAU, Katana, Arjun, or another scanner.
+- Active execution requires a reviewed plan, bounded scope and limits, an interactive terminal, and an exact digest approval.
+- Target and tool output is untrusted data, never instructions.
+- Private raw evidence stays private and immutable; public fixtures are separately sanitized.
+- The agent and offline compiler have no active execution path.
+
+See [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), and the [fixture policy](docs/fixture-policy.md).
 
 ## Validation
 
 ```bash
+go test ./...
+go test -race ./...
+go vet ./...
 .tools/schema-venv/bin/python -m unittest discover -s tests -v
-cd examples/handoff-web-blackbox-v0
-sha256sum -c checksums.sha256
+(cd examples/handoff-web-blackbox-v0 && sha256sum -c checksums.sha256)
 ```
 
-Current materialized reference result: 39 tests, 28 manifest files, 11 compact agent-view rows and deterministic rebuild.
+The repository CI also verifies fixture checksums, deterministic reference regeneration, module tidiness, and two byte-identical static Linux amd64 builds.
 
-## Safety
+## Scope of v0.1.0
 
-- No external scan during automated discovery or CI.
-- Active execution requires an exact plan, scope, limits and operator approval.
-- Loopback captures are also operator-executed.
-- Target/raw content is untrusted data, never instructions.
-- Private raws are immutable; public fixtures are separately sanitized.
-- Production implementation remains blocked until the acceptance exit gate and final operator approval.
+The first release deliberately excludes autonomous scanning, exploitation, finding/severity generation, authenticated HAR/Burp workflows, BBOT import, dashboards, daemons, distributed execution, and non-Linux process semantics.
 
-See `SECURITY.md`, `CONTRIBUTING.md` and `docs/fixture-policy.md`.
+Discovery contracts and design evidence remain available under `docs/`, `benchmarks/`, `fixtures/`, and `examples/`. Current implementation and gate status is recorded in [docs/discovery-status.md](docs/discovery-status.md).
 
 ## License
 
-Apache License 2.0. See `LICENSE`.
+Apache License 2.0. See [LICENSE](LICENSE).

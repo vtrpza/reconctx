@@ -2,12 +2,14 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"syscall"
@@ -168,9 +170,13 @@ func validateCurrentPlan(run model.Run, plan model.Plan) error {
 		return errors.New("plan drift invalidated approval")
 	}
 	for _, tool := range plan.Tools {
-		identity, err := preflight.ResolveTool(tool.ResolvedPath)
+		result, err := preflight.InspectTool(context.Background(), tool.Name, tool.ResolvedPath, plan.Environment, plan.EnvironmentAllowlist)
 		if err != nil {
 			return fmt.Errorf("revalidate tool %s: %w", tool.Name, err)
+		}
+		identity := result.Identity
+		if result.Version != tool.Version {
+			return fmt.Errorf("tool %s version metadata changed after approval", tool.Name)
 		}
 		if identity.ResolvedPath != tool.ResolvedPath || identity.SHA256 != tool.Binary.SHA256 || uint32(identity.Mode) != tool.Binary.Mode || identity.UID != tool.Binary.UID || identity.GID != tool.Binary.GID || identity.Device != tool.Binary.Device || identity.Inode != tool.Binary.Inode {
 			return fmt.Errorf("tool %s identity changed after approval", tool.Name)
@@ -197,7 +203,7 @@ func validateArjunContext(run model.Run, plan model.Plan, scopeDocument []byte, 
 	if err := validateCurrentPlan(run, plan); err != nil {
 		return "", err
 	}
-	if queue.PlanDigest != run.PlanDigest || queue.MaxTargets > plan.Limits.ArjunMaxTargets || len(queue.Candidates) > plan.Limits.ArjunMaxTargets {
+	if queue.PolicyVersion != "arjun-candidate-policy/v0" || queue.PlanDigest != run.PlanDigest || queue.MaxTargets > plan.Limits.ArjunMaxTargets || len(queue.Candidates) > plan.Limits.ArjunMaxTargets {
 		return "", errors.New("candidate queue exceeds or differs from approved plan")
 	}
 	digest, err := approval.QueueDigest(queue)
@@ -229,8 +235,14 @@ func validateArjunContext(run model.Run, plan model.Plan, scopeDocument []byte, 
 		return "", errors.New("candidate queue exceeds approved Arjun limits")
 	}
 	for index, candidate := range queue.Candidates {
+		if candidate.ID == "" || candidate.EndpointID == "" || len(candidate.ObservationIDs) == 0 || len(candidate.EvidenceIDs) == 0 || len(candidate.SourceExecutionIDs) == 0 || !slices.Equal(candidate.ReasonCodes, []string{"selected"}) || candidate.RankPosition <= 0 || !candidate.Rank.SupportedMethodLocation {
+			return "", fmt.Errorf("candidate %d policy metadata is incomplete", index+1)
+		}
 		if arjunPath == "" || !validArjunCommand(candidate, arjunPath, queue.Limits) {
 			return "", fmt.Errorf("candidate %d command is not bound to approved Arjun", index+1)
+		}
+		if candidate.WordlistPath != plan.Inputs.WordlistPath || candidate.WordlistSHA256 != plan.Inputs.WordlistSHA256 || candidate.RequestBudget <= 0 || candidate.RequestBudget > plan.Limits.ArjunRequestBudget {
+			return "", fmt.Errorf("candidate %d wordlist or request budget exceeds the approved plan", index+1)
 		}
 		if err := verifyWordlist(candidate); err != nil {
 			return "", fmt.Errorf("candidate %d: %w", index+1, err)
@@ -248,12 +260,24 @@ func validateArjunContext(run model.Run, plan model.Plan, scopeDocument []byte, 
 }
 
 func validArjunCommand(candidate model.Candidate, arjunPath string, limits model.ToolLimits) bool {
-	method := candidate.Method
-	if candidate.Location == "json" {
-		method = "JSON"
+	switch candidate.Location {
+	case "query":
+		if candidate.Method != "GET" || candidate.SourceMode != "GET" {
+			return false
+		}
+	case "form":
+		if candidate.Method != "POST" || candidate.SourceMode != "POST" {
+			return false
+		}
+	case "json":
+		if candidate.Method != "POST" || candidate.SourceMode != "JSON" {
+			return false
+		}
+	default:
+		return false
 	}
 	expected := []string{
-		arjunPath, "-u", candidate.URL, "-m", method, "-w", candidate.WordlistPath,
+		arjunPath, "-u", candidate.URL, "-m", candidate.SourceMode, "-w", candidate.WordlistPath,
 		"--rate-limit", strconv.Itoa(limits.RatePerSecond), "-t", strconv.Itoa(limits.Concurrency), "-T", strconv.Itoa(limits.TimeoutSeconds),
 	}
 	if candidate.Location == "form" {
@@ -261,6 +285,10 @@ func validArjunCommand(candidate model.Candidate, arjunPath string, limits model
 	} else if candidate.Location == "json" {
 		expected = append(expected, "--headers", "Content-Type: application/json")
 	}
+	if !filepath.IsAbs(candidate.NativeOutputPath) {
+		return false
+	}
+	expected = append(expected, "-oJ", candidate.NativeOutputPath)
 	return slices.Equal(candidate.Argv, expected)
 }
 

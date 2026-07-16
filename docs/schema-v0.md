@@ -34,7 +34,7 @@ Entity schemas use `additionalProperties: false`. New top-level fields require a
 
 `ToolExecution.auth_context_id` and `Observation.auth_context_id` are required but nullable. Black-box fixtures use `null`; authenticated collection uses an opaque identifier matching `authctx_<id>`. Tokens, cookies and authorization headers are never valid values. The identifier correlates observations made under the same external secret reference without embedding that secret.
 
-JSON Schema validates structure and local field constraints. The following global invariants require an additional integrity pass and are covered by `tests/test_example_v0.py`:
+The production compiler validates every emitted record, candidate decision, and manifest against the embedded schemas without network access. It then applies an additional integrity pass for global invariants; the Python suite independently validates the same public contracts and materialized example:
 
 - IDs are globally unique;
 - all `run_id`, entity and evidence references resolve;
@@ -108,7 +108,9 @@ handoff/<run-id>/
 │   ├── parameters.jsonl
 │   ├── observations.jsonl
 │   ├── evidence-index.jsonl
-│   └── relationships.jsonl
+│   ├── relationships.jsonl
+│   ├── agent-view.jsonl
+│   └── arjun-candidates.jsonl
 └── raw/
 ```
 

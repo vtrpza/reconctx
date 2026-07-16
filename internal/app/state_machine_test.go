@@ -65,7 +65,7 @@ func TestTransitionRequiresFreshArjunApprovalAndSupportsSkip(t *testing.T) {
 	if err != nil || run.State != model.RunNormalizingInitial || CanSchedule(run) {
 		t.Fatalf("initial normalization = %#v, %v", run, err)
 	}
-	queue := stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue := stateTestQueue(t, plan, run.PlanDigest)
 	scopeDocument := stateScopeDocument()
 	awaiting, err := AwaitArjunApproval(run, plan, scopeDocument, queue)
 	if err != nil {
@@ -75,13 +75,14 @@ func TestTransitionRequiresFreshArjunApprovalAndSupportsSkip(t *testing.T) {
 		t.Fatalf("awaiting Arjun = %#v", awaiting)
 	}
 	old := stateDecision("arjun", awaiting.QueueDigest, "approve")
-	if err := os.WriteFile(plan.Tools[1].ResolvedPath, []byte("#!/bin/sh\nexit 0\n# changed\n"), 0o700); err != nil {
+	arjunTool := []byte("#!/bin/sh\n# reconctx-tool-metadata/v0 name=arjun version=2.2.7\nexit 0\n")
+	if err := os.WriteFile(plan.Tools[1].ResolvedPath, append(append([]byte(nil), arjunTool...), "# changed\n"...), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := StartArjun(awaiting, plan, scopeDocument, queue, old); err == nil {
 		t.Fatal("changed Arjun binary reused approval")
 	}
-	if err := os.WriteFile(plan.Tools[1].ResolvedPath, []byte("#!/bin/sh\nexit 0\n"), 0o700); err != nil {
+	if err := os.WriteFile(plan.Tools[1].ResolvedPath, arjunTool, 0o700); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.WriteFile(queue.Candidates[0].WordlistPath, []byte("changed\n"), 0o600); err != nil {
@@ -176,31 +177,42 @@ func TestTransitionRejectsOutOfScopePlanCeilingAndCommandDrift(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	queue := stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue := stateTestQueue(t, plan, run.PlanDigest)
 	queue.Candidates[0].URL = "https://outside.test/"
 	queue.Candidates[0].Argv[2] = queue.Candidates[0].URL
 	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
 		t.Fatal("out-of-scope candidate reached approval")
 	}
-	queue = stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue = stateTestQueue(t, plan, run.PlanDigest)
 	queue.MaxTargets = plan.Limits.ArjunMaxTargets + 1
 	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
 		t.Fatal("queue exceeded plan candidate ceiling")
 	}
-	queue = stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue = stateTestQueue(t, plan, run.PlanDigest)
 	queue.Limits.RatePerSecond = plan.Tools[1].Limits.RatePerSecond + 1
 	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
 		t.Fatal("queue exceeded approved Arjun intensity")
 	}
-	queue = stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue = stateTestQueue(t, plan, run.PlanDigest)
 	queue.Candidates[0].Argv[2] = "https://outside.test/"
 	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
 		t.Fatal("command target differed from candidate URL")
 	}
-	queue = stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue = stateTestQueue(t, plan, run.PlanDigest)
 	queue.Candidates[0].Argv = append(queue.Candidates[0].Argv, "-i", "/tmp/targets.txt")
 	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
 		t.Fatal("command imported unmodeled targets")
+	}
+	queue = stateTestQueue(t, plan, run.PlanDigest)
+	queue.Candidates[0].RequestBudget = plan.Limits.ArjunRequestBudget + 1
+	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
+		t.Fatal("candidate exceeded the Approval A request budget")
+	}
+	queue = stateTestQueue(t, plan, run.PlanDigest)
+	queue.Candidates[0].WordlistPath = filepath.Join(t.TempDir(), "other.txt")
+	queue.Candidates[0].Argv[6] = queue.Candidates[0].WordlistPath
+	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
+		t.Fatal("candidate replaced the Approval A wordlist")
 	}
 }
 
@@ -219,7 +231,7 @@ func TestTransitionPermitsApprovedZeroTargetSkip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	queue := stateTestQueue(t, run.PlanDigest, plan.Tools[1].ResolvedPath)
+	queue := stateTestQueue(t, plan, run.PlanDigest)
 	queue.Candidates = nil
 	queue.MaxTargets = 0
 	run, err = AwaitArjunApproval(run, plan, stateScopeDocument(), queue)
@@ -235,8 +247,8 @@ func TestTransitionPermitsApprovedZeroTargetSkip(t *testing.T) {
 func TestArjunCommandBindsLimitsAndJSONMode(t *testing.T) {
 	limits := model.ToolLimits{RatePerSecond: 1, Concurrency: 2, Parallelism: 1, TimeoutSeconds: 9}
 	candidate := model.Candidate{
-		URL: "https://fixture.test/api", Method: "POST", Location: "json", WordlistPath: "/wordlists/params.txt",
-		Argv: []string{"/tools/arjun", "-u", "https://fixture.test/api", "-m", "JSON", "-w", "/wordlists/params.txt", "--rate-limit", "1", "-t", "2", "-T", "9", "--headers", "Content-Type: application/json"},
+		URL: "https://fixture.test/api", Method: "POST", SourceMode: "JSON", Location: "json", WordlistPath: "/wordlists/params.txt", NativeOutputPath: "/captures/native-output.json",
+		Argv: []string{"/tools/arjun", "-u", "https://fixture.test/api", "-m", "JSON", "-w", "/wordlists/params.txt", "--rate-limit", "1", "-t", "2", "-T", "9", "--headers", "Content-Type: application/json", "-oJ", "/captures/native-output.json"},
 	}
 	if !validArjunCommand(candidate, "/tools/arjun", limits) {
 		t.Fatal("valid JSON command rejected")
@@ -244,6 +256,15 @@ func TestArjunCommandBindsLimitsAndJSONMode(t *testing.T) {
 	candidate.Argv[4] = "POST"
 	if validArjunCommand(candidate, "/tools/arjun", limits) {
 		t.Fatal("POST form mode accepted for JSON candidate")
+	}
+	candidate.Argv[4] = "JSON"
+	candidate.Argv[len(candidate.Argv)-1] = "/captures/other.json"
+	if validArjunCommand(candidate, "/tools/arjun", limits) {
+		t.Fatal("unbound native output path accepted")
+	}
+	candidate.Argv = candidate.Argv[:len(candidate.Argv)-2]
+	if validArjunCommand(candidate, "/tools/arjun", limits) {
+		t.Fatal("command without native -oJ capture accepted")
 	}
 }
 
@@ -285,7 +306,8 @@ func stateTestPlan(t *testing.T) model.Plan {
 	identities := make(map[string]preflight.ToolIdentity, 2)
 	for _, name := range []string{"gau", "arjun"} {
 		path := filepath.Join(toolDirectory, name)
-		if err := os.WriteFile(path, []byte("#!/bin/sh\nexit 0\n"), 0o700); err != nil {
+		version := map[string]string{"gau": "2.2.4", "arjun": "2.2.7"}[name]
+		if err := os.WriteFile(path, []byte("#!/bin/sh\n# reconctx-tool-metadata/v0 name="+name+" version="+version+"\nexit 0\n"), 0o700); err != nil {
 			t.Fatal(err)
 		}
 		identity, err := preflight.ResolveTool(path)
@@ -298,6 +320,12 @@ func stateTestPlan(t *testing.T) model.Plan {
 		return model.ToolBinary{SHA256: identity.SHA256, Mode: uint32(identity.Mode), UID: identity.UID, GID: identity.GID, Device: identity.Device, Inode: identity.Inode}
 	}
 	scopeHash := sha256.Sum256(stateScopeDocument())
+	wordlist := []byte("id\nquery\n")
+	wordlistPath := filepath.Join(t.TempDir(), "params.txt")
+	if err := os.WriteFile(wordlistPath, wordlist, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	wordlistHash := sha256.Sum256(wordlist)
 	return model.Plan{
 		PlanVersion:            "reconctx-plan/v0",
 		RunID:                  "run_test",
@@ -307,6 +335,7 @@ func stateTestPlan(t *testing.T) model.Plan {
 		Inputs: model.PlanInputs{
 			Target: "fixture.test", Seeds: []string{"https://fixture.test/"}, ScopePath: "scope.yaml",
 			ScopeSHA256: "sha256:" + hex.EncodeToString(scopeHash[:]), Profile: "web-blackbox",
+			WordlistPath: wordlistPath, WordlistSHA256: "sha256:" + hex.EncodeToString(wordlistHash[:]),
 		},
 		Tools: []model.ToolPlan{{
 			Name: "gau", ResolvedPath: identities["gau"].ResolvedPath, Version: "2.2.4", ActivityClass: "passive_external",
@@ -319,24 +348,23 @@ func stateTestPlan(t *testing.T) model.Plan {
 			Argv:   []string{identities["arjun"].ResolvedPath, "--version"}, Limits: model.ToolLimits{RatePerSecond: 2, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 15},
 			OutputPaths: []string{"runs/run_test/arjun/stdout.raw"},
 		}},
-		Limits: model.PlanLimits{ArjunMaxTargets: 25}, EnvironmentAllowlist: []string{"LANG"}, WorkspaceRoot: "/work",
+		Limits: model.PlanLimits{ArjunMaxTargets: 25, ArjunRequestBudget: 100}, EnvironmentAllowlist: []string{"LANG"}, WorkspaceRoot: "/work",
 	}
 }
 
-func stateTestQueue(t *testing.T, planDigest, arjunPath string) model.CandidateQueue {
+func stateTestQueue(t *testing.T, plan model.Plan, planDigest string) model.CandidateQueue {
 	t.Helper()
-	wordlist := []byte("id\nquery\n")
-	wordlistPath := filepath.Join(t.TempDir(), "params.txt")
-	if err := os.WriteFile(wordlistPath, wordlist, 0o600); err != nil {
-		t.Fatal(err)
-	}
-	wordlistHash := sha256.Sum256(wordlist)
+	arjunPath := plan.Tools[1].ResolvedPath
+	nativeOutputPath := filepath.Join(t.TempDir(), "native-output.json")
 	return model.CandidateQueue{
-		QueueVersion: "reconctx-candidate-queue/v0", PlanDigest: planDigest,
+		QueueVersion: "reconctx-candidate-queue/v0", PolicyVersion: "arjun-candidate-policy/v0", PlanDigest: planDigest,
 		Candidates: []model.Candidate{{
-			URL: "https://fixture.test/search", Method: "GET", Location: "query", WordlistPath: wordlistPath,
-			WordlistSHA256: "sha256:" + hex.EncodeToString(wordlistHash[:]),
-			Argv:           []string{arjunPath, "-u", "https://fixture.test/search", "-m", "GET", "-w", wordlistPath, "--rate-limit", "2", "-t", "1", "-T", "15"}, RequestBudget: 100,
+			ID: "candidate_test", EndpointID: "endpoint_test", ObservationIDs: []string{"observation_test"}, EvidenceIDs: []string{"evidence_test"}, SourceExecutionIDs: []string{"tx_test"}, ReasonCodes: []string{"selected"},
+			Rank: model.CandidateRank{SupportedMethodLocation: true}, RankPosition: 1,
+			URL: "https://fixture.test/search", Method: "GET", SourceMode: "GET", Location: "query", WordlistPath: plan.Inputs.WordlistPath,
+			WordlistSHA256:   plan.Inputs.WordlistSHA256,
+			NativeOutputPath: nativeOutputPath,
+			Argv:             []string{arjunPath, "-u", "https://fixture.test/search", "-m", "GET", "-w", plan.Inputs.WordlistPath, "--rate-limit", "2", "-t", "1", "-T", "15", "-oJ", nativeOutputPath}, RequestBudget: 100,
 			Scope: model.CandidateScope{Classification: "in_scope", RuleID: "fixture", Reason: "origin allowlist root matched"},
 		}},
 		Limits: model.ToolLimits{RatePerSecond: 2, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 15}, MaxTargets: 25,

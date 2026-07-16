@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -188,6 +189,39 @@ func TestURLStripsAllTrailingHostDots(t *testing.T) {
 	if result.Host != "example.com" {
 		t.Fatalf("host = %q, want example.com", result.Host)
 	}
+}
+
+func FuzzCanonicalURL(f *testing.F) {
+	for _, seed := range []string{
+		"https://example.com/",
+		"HTTP://Example.COM:80/users?id=1&id=2#fragment",
+		"https://[2001:db8::1]:443/a/../b",
+		"https://bücher.example/資料?q=%E2%9C%93",
+		`https:\\example.com\path`,
+		"http://2130706433/",
+	} {
+		f.Add(seed)
+	}
+	f.Fuzz(func(t *testing.T, raw string) {
+		if len(raw) > 64<<10 {
+			return
+		}
+		first, firstErr := CanonicalizeURL(raw)
+		second, secondErr := CanonicalizeURL(raw)
+		if (firstErr == nil) != (secondErr == nil) || firstErr != nil && firstErr.Error() != secondErr.Error() || !reflect.DeepEqual(first, second) {
+			t.Fatalf("non-deterministic result for %q", raw)
+		}
+		if firstErr != nil {
+			return
+		}
+		if strings.ContainsAny(first.CanonicalRouteURL, "?#") || strings.Contains(first.CanonicalObservationURL, "#") {
+			t.Fatalf("canonical URLs retained query/fragment boundary: %#v", first)
+		}
+		roundTrip, err := CanonicalizeURL(first.CanonicalObservationURL)
+		if err != nil || roundTrip.CanonicalRouteURL != first.CanonicalRouteURL || roundTrip.CanonicalObservationURL != first.CanonicalObservationURL {
+			t.Fatalf("canonical URL did not round-trip: %#v, %v", first, err)
+		}
+	})
 }
 
 func stringPointer(value string) *string { return &value }

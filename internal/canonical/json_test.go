@@ -25,6 +25,15 @@ func TestCanonicalJSONMapOrder(t *testing.T) {
 	}
 }
 
+func TestCanonicalJSONPreservesEmptyArrays(t *testing.T) {
+	t.Parallel()
+
+	got, err := Canonicalize([]byte(`{"null":null,"empty":[]}`))
+	if err != nil || string(got) != `{"empty":[],"null":null}` {
+		t.Fatalf("Canonicalize empty array = %s, %v", got, err)
+	}
+}
+
 func TestCanonicalJSONFailsClosed(t *testing.T) {
 	t.Parallel()
 

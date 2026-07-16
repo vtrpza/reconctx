@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 	"testing"
+
+	"github.com/vtrpza/reconctx/internal/version"
 )
 
 func TestRootHelp(t *testing.T) {
@@ -15,7 +17,7 @@ func TestRootHelp(t *testing.T) {
 		t.Run(strings.Join(args, "_"), func(t *testing.T) {
 			t.Parallel()
 			var stdout, stderr bytes.Buffer
-			if code := Run(args, &stdout, &stderr); code != 0 {
+			if code := Run(args, strings.NewReader(""), &stdout, &stderr); code != 0 {
 				t.Fatalf("Run(%q) exit code = %d, want 0", args, code)
 			}
 			if got := stdout.String(); got != HelpText {
@@ -28,16 +30,27 @@ func TestRootHelp(t *testing.T) {
 	}
 }
 
+func TestRootVersion(t *testing.T) {
+	t.Parallel()
+	var stdout, stderr bytes.Buffer
+	if code := Run([]string{"--version"}, strings.NewReader(""), &stdout, &stderr); code != 0 {
+		t.Fatalf("exit code = %d, stderr = %q", code, stderr.String())
+	}
+	if got, want := stdout.String(), version.Version+"\n"; got != want {
+		t.Fatalf("stdout = %q, want %q", got, want)
+	}
+}
+
 type failingWriter struct{}
 
 func (failingWriter) Write([]byte) (int, error) { return 0, errors.New("write failed") }
 
 func TestRootReturnsFailureWhenOutputCannotBeWritten(t *testing.T) {
 	t.Parallel()
-	if code := Run([]string{"help"}, failingWriter{}, &bytes.Buffer{}); code == 0 {
+	if code := Run([]string{"help"}, strings.NewReader(""), failingWriter{}, &bytes.Buffer{}); code == 0 {
 		t.Fatal("help writer failure returned success")
 	}
-	if code := Run([]string{"unknown"}, &bytes.Buffer{}, failingWriter{}); code == 0 {
+	if code := Run([]string{"unknown"}, strings.NewReader(""), &bytes.Buffer{}, failingWriter{}); code == 0 {
 		t.Fatal("error writer failure returned success")
 	}
 }
@@ -46,7 +59,7 @@ func TestRootUnknownCommand(t *testing.T) {
 	t.Parallel()
 
 	var stdout, stderr bytes.Buffer
-	if code := Run([]string{"scan"}, &stdout, &stderr); code != 2 {
+	if code := Run([]string{"scan"}, strings.NewReader(""), &stdout, &stderr); code != 2 {
 		t.Fatalf("exit code = %d, want 2", code)
 	}
 	if stdout.Len() != 0 {
@@ -60,7 +73,7 @@ func TestRootUnknownCommand(t *testing.T) {
 func TestRootRejectsImplicitApprovalFlag(t *testing.T) {
 	t.Parallel()
 	var stdout, stderr bytes.Buffer
-	if code := Run([]string{"--yes"}, &stdout, &stderr); code != 2 {
+	if code := Run([]string{"--yes"}, strings.NewReader(""), &stdout, &stderr); code != 2 {
 		t.Fatalf("exit code = %d, want 2", code)
 	}
 	if stdout.Len() != 0 {

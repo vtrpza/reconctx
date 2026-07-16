@@ -7,9 +7,9 @@
 
 | Tool | Version | Native format selected | Fixture status | Adapter status |
 |---|---:|---|---|---|
-| GAU | 2.2.4 | line-oriented text | canonical + regressions captured | draft contract ready |
-| Katana | v1.6.1 | JSONL | normal scoped crawl + interrupted partial crawl captured | draft contract ready |
-| Arjun | 2.2.7 | JSON + stdout for zero/failure | GET/POST/JSON/zero + interruption + request-timeout failure captured | draft contract ready |
+| GAU | 2.2.4 | line-oriented text | canonical + regressions captured | implemented and fixture-tested |
+| Katana | v1.6.1 | JSONL | normal scoped crawl + interrupted partial crawl captured | implemented and fixture-tested |
+| Arjun | 2.2.7 | JSON + stdout for zero/failure | GET/POST/JSON/zero + interruption + request-timeout failure captured | implemented and fixture-tested |
 
 ## GAU 2.2.4
 
@@ -20,7 +20,7 @@ GAU produces historical/provider-derived URL observations. A URL from GAU is not
 ### Canonical invocation
 
 ```text
-gau [domain] --verbose --providers [provider-set] --threads 1 --timeout 45 --o [new-output-path]
+gau --config .reconctx-gau-config-absent [domain] --subs --verbose --providers [provider-set] --threads 1 --timeout 45 --o [new-output-path]
 ```
 
 For release 2.2.4, canonical adapter input is native text without `--json`.
@@ -93,11 +93,11 @@ Adapter rule:
 - run unstable providers in separate executions;
 - classify run as `partial` when any selected provider errors or lacks a terminally understood state.
 
-#### G-2.2.4-MISSING-CONFIG-WARNING
+#### G-2.2.4-ISOLATED-MISSING-CONFIG-WARNING
 
-Absence of `~/.gau.toml` produces a warning but falls back to defaults. This is not a failed execution.
+The approved command names `.reconctx-gau-config-absent` inside the new private execution directory. The runner creates that directory immediately before launch and never materializes that path, so GAU cannot consult mutable `~/.gau.toml` state and falls back to its built-in defaults. The resulting missing-config warning is expected and is not a failed execution.
 
-Adapter rule: classify this exact warning as `config_defaulted`, not `error`.
+Adapter rule: bind the explicit isolation path in Approval A and classify its exact missing-config warning as `config_defaulted`, not `error`.
 
 ### Provider behavior observed
 
@@ -220,7 +220,7 @@ Two absence-of-native-output cases have different semantics:
 
 In the request-timeout case, Arjun 2.2.7 raised `AttributeError: 'str' object has no attribute 'status_code'` during stability initialization. The process failed before the 30-second outer safety timeout. This is not a zero-result case and supports no parameter-absence claim.
 
-The installed Arjun CLI does not expose a functional `--version`; that invocation prints help containing `127.0.0.1:8080`. Version resolution must therefore prefer a semantic version marker (`v2.2.7`) from runtime stdout/package metadata and must never accept an IP-like token as the tool version.
+The installed Arjun CLI does not expose a functional `--version`; that invocation prints help containing `127.0.0.1:8080`. Preflight therefore does not execute `--version`. It reads bounded `Name: arjun` and `Version: 2.2.7` distribution metadata from the same environment prefix as an absolute, path-validated entrypoint/interpreter. An unbound `env python` shebang, ambiguous distribution metadata, a bare numeric token, and an IP-like token are rejected. A standalone anchored `v2.2.7` remains a valid parser input for imported runtime evidence, not a preflight probe.
 
 Fixtures: `ARJUN-INTERRUPTED-LOOPBACK/` and `ARJUN-REQUEST-TIMEOUT-LOOPBACK/` under `fixtures/cases/arjun/2.2.7/`.
 

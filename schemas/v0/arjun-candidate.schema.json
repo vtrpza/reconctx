@@ -1,0 +1,185 @@
+{
+  "$id": "https://schemas.reconctx.dev/v0/arjun-candidate.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {"included": {"const": true}},
+        "required": ["included"]
+      },
+      "then": {
+        "properties": {
+          "argv_redacted": {"minItems": 2},
+          "eligible": {"const": true},
+          "location": {"enum": ["query", "form", "json"]},
+          "method": {"$ref": "common.schema.json#/$defs/httpMethod"},
+          "rank_position": {"minimum": 1, "type": "integer"},
+          "reason_codes": {"const": ["selected"]},
+          "source_mode": {"enum": ["GET", "POST", "JSON"]}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"eligible": {"const": true}, "included": {"const": false}},
+        "required": ["eligible", "included"]
+      },
+      "then": {
+        "properties": {
+          "rank_position": {"minimum": 1, "type": "integer"},
+          "reason_codes": {"const": ["max_targets_overflow"]}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"eligible": {"const": false}},
+        "required": ["eligible"]
+      },
+      "then": {"properties": {"rank_position": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"source_mode": {"const": "GET"}}, "required": ["source_mode"]},
+      "then": {"properties": {"location": {"const": "query"}, "method": {"const": "GET"}}}
+    },
+    {
+      "if": {"properties": {"source_mode": {"const": "POST"}}, "required": ["source_mode"]},
+      "then": {"properties": {"location": {"const": "form"}, "method": {"const": "POST"}}}
+    },
+    {
+      "if": {"properties": {"source_mode": {"const": "JSON"}}, "required": ["source_mode"]},
+      "then": {"properties": {"location": {"const": "json"}, "method": {"const": "POST"}}}
+    }
+  ],
+  "properties": {
+    "argv_redacted": {
+      "items": {"type": "string"},
+      "type": "array"
+    },
+    "candidate_id": {
+      "pattern": "^candidate_sha256_[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "candidate_policy_version": {"const": "arjun-candidate-policy/v0"},
+    "canonical_route_url": {
+      "format": "uri",
+      "pattern": "^https?://[^?#]+$",
+      "type": "string"
+    },
+    "eligible": {"type": "boolean"},
+    "endpoint_id": {"$ref": "common.schema.json#/$defs/endpointId"},
+    "evidence_ids": {
+      "items": {"$ref": "common.schema.json#/$defs/evidenceId"},
+      "type": "array",
+      "uniqueItems": true
+    },
+    "included": {"type": "boolean"},
+    "location": {"$ref": "common.schema.json#/$defs/parameterLocation"},
+    "max_targets": {"minimum": 0, "type": "integer"},
+    "method": {
+      "anyOf": [
+        {"$ref": "common.schema.json#/$defs/httpMethod"},
+        {"type": "null"}
+      ]
+    },
+    "observation_ids": {
+      "items": {"$ref": "common.schema.json#/$defs/observationId"},
+      "type": "array",
+      "uniqueItems": true
+    },
+    "queue_digest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "rank_inputs": {
+      "additionalProperties": false,
+      "properties": {
+        "api_like_path": {"type": "boolean"},
+        "currently_observed_by_katana": {"type": "boolean"},
+        "existing_query_name_evidence": {"type": "boolean"},
+        "independent_source_executions": {"minimum": 0, "type": "integer"},
+        "no_static_extension": {"type": "boolean"},
+        "supported_method_location": {"type": "boolean"}
+      },
+      "required": [
+        "currently_observed_by_katana",
+        "existing_query_name_evidence",
+        "api_like_path",
+        "independent_source_executions",
+        "no_static_extension",
+        "supported_method_location"
+      ],
+      "type": "object"
+    },
+    "rank_position": {"minimum": 1, "type": ["integer", "null"]},
+    "reason_codes": {
+      "items": {
+        "enum": [
+          "selected",
+          "max_targets_overflow",
+          "out_of_scope",
+          "scope_unknown",
+          "static_extension",
+          "static_mime",
+          "fragment_only",
+          "canonical_duplicate",
+          "excluded_path",
+          "historical_only",
+          "unsupported_method_location",
+          "missing_provenance"
+        ]
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "record_type": {"const": "arjun_candidate"},
+    "request_budget": {"minimum": 1, "type": "integer"},
+    "schema_version": {"$ref": "common.schema.json#/$defs/schemaVersion"},
+    "scope_decision": {"$ref": "common.schema.json#/$defs/scopeDecision"},
+    "selected_url": {
+      "format": "uri",
+      "pattern": "^https?://[^?#]+$",
+      "type": "string"
+    },
+    "source_execution_ids": {
+      "items": {"$ref": "common.schema.json#/$defs/toolExecutionId"},
+      "type": "array",
+      "uniqueItems": true
+    },
+    "source_mode": {"enum": ["GET", "POST", "JSON", null]},
+    "wordlist_sha256": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "record_type",
+    "candidate_policy_version",
+    "queue_digest",
+    "candidate_id",
+    "endpoint_id",
+    "selected_url",
+    "canonical_route_url",
+    "method",
+    "source_mode",
+    "location",
+    "eligible",
+    "included",
+    "reason_codes",
+    "rank_inputs",
+    "rank_position",
+    "observation_ids",
+    "evidence_ids",
+    "source_execution_ids",
+    "scope_decision",
+    "argv_redacted",
+    "wordlist_sha256",
+    "request_budget",
+    "max_targets"
+  ],
+  "title": "Redacted Arjun candidate decision v0",
+  "type": "object"
+}

@@ -26,11 +26,11 @@ This is a safety/provenance product, not a sandbox for hostile native binaries. 
 | target authorization/scope | cannot silently broaden |
 | approval decision | binds exact behavior-bearing plan/queue digest |
 | credentials/auth context | raw secret never enters normalized/handoff data |
-| raw evidence | immutable after finalization; attributable to execution |
+| raw evidence | bounded capture, immutable after finalization, attributable to execution, explicit when truncated |
 | normalized records | deterministic, schema-valid, rebuildable |
 | provenance graph | every fact resolves to execution/artifact/locator |
 | private workspace | no unintended disclosure or path escape |
-| handoff package | portable, sanitized, internally consistent |
+| handoff package | portable, scan-admitted, internally consistent |
 | operator terminal | target output cannot inject commands/control sequences |
 | child process lifecycle | no orphaned or unbounded tool activity |
 | public fixture/repository | no private engagement data or executable hostile artifacts |
@@ -76,11 +76,11 @@ A privileged local attacker who can modify reconctx memory, ptrace the process, 
                                               ▼
                                       [private raw store]
                                               │
-                         B5 bounded parser    │
+                    B5 bounded buffered parser│
                                               ▼
                                     [normalized records]
                                               │
-                         B6 redaction/select │
+                     B6 scan/block-or-omit   │
                                               ▼
                                        [handoff package]
                                               │
@@ -97,10 +97,10 @@ Network scope is an additional boundary around every tool request/redirect/candi
 2. No shell parses tool arguments.
 3. Every tool path is absolute, resolved, versioned, and rechecked before execution.
 4. Scope is evaluated before scheduling; out-of-scope/unknown is record-only.
-5. Raw evidence is never overwritten by normalization or sanitization.
+5. Finalized raw evidence is never overwritten by normalization or packaging.
 6. Target/tool bytes are never replayed verbatim to a terminal or presented as agent instructions.
 7. Managed writes remain below a verified workspace/handoff root without symlink traversal.
-8. Secrets are removed before indexing/package compilation; authentication uses only opaque `authctx_...` references.
+8. Secret or private-path matches block public packaging; v0 does not rewrite raw bytes. Authentication uses only opaque `authctx_...` references.
 9. Cancellation stops process groups and preserves recoverable evidence.
 10. A package is deliverable only after schema, reference, manifest, secret, and checksum gates pass.
 11. Recon observations never become findings/severity automatically.
@@ -154,15 +154,17 @@ Network scope is an additional boundary around every tool request/redirect/candi
 - resolve absolute realpath and record version/hash/metadata;
 - warn/refuse binaries or parent directories writable by an unexpected principal;
 - execute the approved resolved path, not the command name;
-- adapter-specific environment allowlist;
+- adapter-specific environment allowlist plus a digest-bound effective `KEY=value` snapshot reused at execution;
+- resolve bare names only through that approved `PATH`, remove empty/duplicate entries, and reject relative entries;
 - clear `PYTHONPATH`/`PYTHONHOME` for isolated Python tools as demonstrated by Arjun;
 - model proxy/config usage explicitly in plan digest;
+- force GAU's approved deliberately absent config path inside its new execution directory so ambient `~/.gau.toml` is never loaded;
 - clear dangerous loader variables;
 - disable tool auto-update during runs.
 
-Preflight path policy is fail-closed: every resolved path component must be owned by root or the effective user and must not be group/world writable. The only exception is a root-owned sticky directory such as `/tmp`; the executable itself must be a regular executable file and its hash, mode, owner, device and inode enter the plan digest.
+Preflight path policy is fail-closed: every resolved path component must be owned by root or the effective user and must not be group/world writable. The only exception is a root-owned sticky directory such as `/tmp`; the executable itself must be a regular executable file and its hash, mode, owner, device and inode enter the plan digest. Version inspection is metadata-only and never starts the candidate. Arjun metadata is tied to the entrypoint environment prefix, but v0 does not hash the complete Python environment; that environment must remain private and immutable through execution.
 
-**Residual risk:** binary can be replaced by the same local account between check and exec. Linux implementation should minimize TOCTOU and record the executed file identity; stronger fd-based execution may be evaluated in the spike.
+**Residual risk:** Linux reopens and revalidates the approved binary, then executes that opened file descriptor. A hostile process under the same account could still mutate the executable inode concurrently.
 
 ### T-04 — Scope drift, redirect escape, and canonicalization mismatch
 
@@ -176,6 +178,7 @@ Preflight path policy is fail-closed: every resolved path component must be owne
 - one versioned canonicalization policy;
 - scope evaluation on canonical origin/host/path before scheduling;
 - tool-native crawl scope as defense in depth;
+- derive Katana's crawl regex from the exact root that admitted each seed, preserving URL-prefix boundaries and excluding ambiguous percent-escaped suffixes;
 - re-evaluate redirect/discovered destinations;
 - reject userinfo, backslashes, malformed percent escapes, non-standard numeric IPs, unsupported schemes, and unknown scope;
 - explicit policy for DNS/IP/private-network boundaries before authenticated/network expansion;
@@ -195,7 +198,7 @@ Preflight path policy is fail-closed: every resolved path component must be owne
 - capture raw bytes without terminal replay;
 - render escaped/sanitized previews with byte/line limits;
 - never use raw output as a terminal format string;
-- preserve digest and locator for original bytes;
+- preserve digest and locator for captured bytes;
 - test CSI, OSC, NUL, backspace, CR, bidi and invalid UTF-8.
 
 ### T-06 — Prompt injection through target/tool content
@@ -229,11 +232,11 @@ Preflight path policy is fail-closed: every resolved path component must be owne
 - black-box v0 accepts no secret input;
 - future auth uses secret references and opaque `auth_context_id` only;
 - private raw workspace mode `0700`, files `0600` by default;
-- redaction before indexing and packaging;
-- typed redaction for Authorization, cookies, tokens, API keys, proxy credentials, sensitive query names and configured patterns;
+- fail-closed secret and private-path scans before captured bytes enter normalized/public packaging;
+- block compilation on a scan match; omit/withhold raw only when the workflow has no embedded-raw dependency;
 - command/environment allowlist and redacted display;
 - secret scan blocks handoff/public fixture publication;
-- private originals never modified during sanitization;
+- finalized private captures are never modified by packaging;
 - manifest declares omitted/withheld evidence.
 
 **Residual risk:** generic entropy/regex scans miss context-specific secrets; operator review remains mandatory before publication.
@@ -257,7 +260,7 @@ Preflight path policy is fail-closed: every resolved path component must be owne
 - validate every handoff relative path before copy;
 - do not extract archives in v0 without a dedicated safe extractor.
 
-**Residual risk:** hardlink/TOCTOU behavior needs OS-specific tests in the Go spike.
+**Residual risk:** Linux rooted-operation and publication tests cover symlink, hardlink, and replacement races; non-Linux filesystem semantics remain unsupported in v0.1.0.
 
 ### T-09 — Resource exhaustion
 
@@ -266,16 +269,17 @@ Preflight path policy is fail-closed: every resolved path component must be owne
 **Impact:** host denial of service and incomplete evidence.  
 **Initial risk:** High.
 
-**Required controls:**
+**Implemented controls:**
 
-- streaming parsers with byte, line, depth, record, and field-size limits;
+- bounded buffered adapters with whole-artifact and line limits, plus runner byte, line, and record capture limits;
 - bounded diagnostics/snippets;
-- disk quota/preflight free-space threshold;
 - max tools, children, candidates, targets and artifact sizes;
 - deterministic candidate cap before Approval B;
 - regex policy/timeout or safe engine for scope patterns;
 - no compressed import in v0 unless bounded;
 - fail partial while preserving safely finalized artifacts.
+
+**Residual risk / deferred:** v0 has no disk quota or free-space preflight. Disk exhaustion can still fail capture or publication; the operator must provision and monitor workspace storage.
 
 ### T-10 — Orphaned or runaway subprocesses
 
@@ -311,6 +315,7 @@ Preflight path policy is fail-closed: every resolved path component must be owne
 - `success_zero` requires positive normal-completion evidence;
 - preserve provider diagnostics;
 - unsupported/malformed raw yields gap, not invented records;
+- capture-limit truncation is explicit and forces partial coverage;
 - duplicate artifacts may dedupe content hash while retaining roles;
 - run/handoff lists explicit gaps.
 
@@ -422,20 +427,20 @@ Unknown flags fail closed in the initial supported profiles. The operator can st
 - handoff permissions are explicit and do not imply public safety;
 - checksums are generated after final content.
 
-## 9. Secret/redaction pipeline
+## 9. Secret and private-path admission gate
 
 ```text
-private raw (restricted)
-  → bounded parser
-  → typed sensitive-field detection
-  → normalized value omission/redaction
-  → selective evidence copy/redaction
-  → secret/PII/path scan
-  → manifest records copied/referenced/withheld status
-  → operator publication/delivery review
+private bounded capture (restricted)
+  → bounded buffered parser
+  → normalized projection of selected typed fields
+  → secret/private-path scan of candidate public bytes
+  → pass: embed captured bytes unchanged
+  → fail: block compilation
+  → manifest records embedded/omitted status
+  → operator delivery review
 ```
 
-Redaction creates a new artifact with its own hash and a derivation relationship. It never edits private raw in place.
+v0 does not synthesize a redacted raw derivative. `raw_policy: embedded_sanitized` means the captured bytes passed admission checks and were copied byte-for-byte; it does not mean they were rewritten. `omitted` applies only when the workflow requires no embedded raw bytes.
 
 ## 10. Security test plan
 
@@ -462,8 +467,8 @@ Redaction creates a new artifact with its own hash and a derivation relationship
 - timeout;
 - child/grandchild ignores TERM;
 - Ctrl-C during write/parse/compile;
-- disk quota/write failure;
-- resume after each failure point;
+- write failure (disk quota/free-space preflight remains deferred);
+- safe resume or fail-closed rejection from every persisted checkpoint state;
 - no leaked children.
 
 ### Package tests

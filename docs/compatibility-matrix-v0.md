@@ -1,52 +1,59 @@
 # Compatibility Matrix v0
 
-**Status:** discovery evidence; production adapters are not implemented.
+**Status:** v0.1.0 release-candidate contract. Compatibility means fixture-backed support for the exact versions below, not a promise for adjacent versions or every tool option.
 
 ## Platform
 
-| Component | Verified environment | MVP support decision |
+| Component | Verified version/environment | v0.1.0 support |
 |---|---|---|
-| OS | Parrot/Linux amd64 | Linux-first |
-| Production CLI | Go 1.24.4 | Go 1.24+; Linux-first |
-| Reference tooling | Python 3.13.5 | development/fixtures only |
-| Agent runtime integration | none | explicitly out of scope |
+| Operating system | Linux amd64 | Supported release target |
+| Production CLI | Go 1.24.4 | Built as a static Linux amd64 binary |
+| Reference tooling | Python 3.13.5 | Development and fixture validation only |
+| macOS, Windows, other architectures | Not accepted | Unsupported in v0.1.0 |
+| Agent runtime integration | None | Explicitly out of scope |
 
-## Pinned implementation dependencies
+## Implementation dependencies
 
-| Dependency | Version | Purpose | License reviewed |
+| Dependency | Pinned version | Purpose | License |
 |---|---:|---|---|
+| `github.com/google/jsonschema-go` | 0.4.3 | Draft 2020-12 validation of emitted records, candidate decisions, and manifests | MIT |
 | `golang.org/x/net` | 0.48.0 | UTS #46 / IDNA processing | BSD-3-Clause |
 | `golang.org/x/text` | 0.32.0 | Unicode case mapping and NFC | BSD-3-Clause |
 | `golang.org/x/sys` | 0.41.0 | Linux `openat2` and `renameat2` | BSD-3-Clause |
-| `go.yaml.in/yaml/v3` | 3.0.4 | strict operator-facing YAML | MIT / Apache-2.0 |
-| Python `idna` | 3.4 | Unicode 15 oracle used only by tests | BSD-3-Clause |
+| `go.yaml.in/yaml/v3` | 3.0.4 | Strict operator-facing YAML | MIT / Apache-2.0 |
+| Python `idna` | 3.4 | Unicode oracle used only by tests | BSD-3-Clause |
 
-## Recon tools
+The complete dependency and license inventory must be regenerated and reviewed for each release candidate. Python packages are pinned by version and verified wheel SHA-256.
 
-| Tool | Captured version | Interface validated | Fixture status | Known constraints |
-|---|---:|---|---|---|
-| Katana | v1.6.1 | JSONL crawl, stdout/native equivalence, exact loopback scope, interrupted valid-prefix handling | normal + interrupted fixtures validated | build required Go toolchain switching to 1.25.12; interrupted output is partial coverage, never a complete-crawl claim |
-| GAU | 2.2.4 | canonical text plus JSON regression | text and extensionless-drop fixtures validated | JSON mode drops extensionless URLs; output path appends; provider errors may exit 0; per-line provider unavailable |
-| Arjun | 2.2.7 | GET, POST form, JSON, zero, interruption and request-timeout failure | six loopback fixtures validated | zero may omit native JSON; interrupted absence is unknown; request-timeout path raised internal `AttributeError`; `--version` prints help, so runtime banner/package metadata is required |
+## Reconnaissance tools
 
-## Schema and package
+| Tool | Supported version | Validated interface | Conservative limitations |
+|---|---:|---|---|
+| GAU | 2.2.4 | Canonical text output; JSON regression; provider diagnostics | JSON mode can drop extensionless URLs; output paths append; provider errors can exit 0; provider identity is unavailable per native line |
+| Katana | v1.6.1 | JSONL crawl; normal and interrupted valid-prefix fixtures | Interrupted output is partial coverage; URL-prefix scope conservatively excludes percent-escaped discovered suffixes |
+| Arjun | 2.2.7 | GET, POST form, JSON, zero-result, interruption, and request-timeout fixtures | Zero may omit native JSON; interrupted absence remains unknown; timeout may surface an internal tool error |
+
+Tool binaries are not bundled. Preflight checks the resolved executable, version metadata, file identity, and SHA-256 without starting the tool. GAU and Katana versions come from Go build information with the exact expected main-module path. GAU is launched with an approved deliberately absent config path inside its new execution directory, preventing ambient `~/.gau.toml` from changing behavior. Arjun 2.2.7 uses bounded `METADATA` from the `arjun` distribution in the same environment prefix as its absolute Python entrypoint/interpreter; an unbound `/usr/bin/env python` entrypoint is rejected. Hash-bound wrapper shims may carry the deterministic `reconctx-tool-metadata/v0` marker used by integration fake tools. A changed executable or unsupported version fails closed before active execution.
+
+The v0 plan binds the Arjun entrypoint identity, version, and effective environment, but not a digest of every interpreter and installed package file in its virtual environment. Operators must therefore use a private, immutable Arjun environment between planning and execution; full Python environment/`RECORD` closure hashing is deferred until real acceptance evidence shows it is needed.
+
+## Data contracts
 
 | Contract | Version | State |
 |---|---|---|
-| Normalized records | `reconctx/v0` | Draft 2020-12 schemas and 46-test reference suite validated |
-| URL canonicalization | `url-canonicalization/v0` | executable vectors plus direct Go↔Python differential gate validated |
-| Agent view | `reconctx-agent-view/v0` | deterministic derived projection; non-authoritative |
-| Handoff manifest | `reconctx/v0` | checksums and cross-references validated |
-| BBOT importer | planned after first vertical slice | no runtime validation yet |
+| Normalized records | `reconctx/v0` | Implemented and schema/fixture tested |
+| URL canonicalization | `url-canonicalization/v0` | Go implementation checked against executable vectors and Python oracle |
+| Candidate queue | `reconctx-candidate-queue/v0` | Deterministic, capped, and digest-bound |
+| Agent view | `reconctx-agent-view/v0` | Deterministic derived projection; non-authoritative |
+| Handoff manifest | `reconctx/v0` | Checksummed and cross-reference validated |
+| BBOT importer | Deferred | No runtime support in v0.1.0 |
 
-## Support meaning
+## Expanding support
 
-“Validated” means demonstrated against the pinned sanitized fixtures and exact versions above. It does not claim compatibility with newer/older versions or every tool option. Unknown versions must be preflighted and should fail closed or be labeled unsupported until a fixture confirms their native contract.
+Supporting a new platform or scanner version requires:
 
-Version expansion requires:
-
-1. operator-captured private evidence;
-2. sanitized/derived fixture review;
-3. adapter regression tests;
-4. matrix update;
-5. conservative release notes describing dynamic limitations.
+1. operator-captured private evidence from an authorized target;
+2. sanitized or derived fixture review;
+3. adapter and failure-path regression tests;
+4. process-control acceptance where behavior changes;
+5. matrix and release-note updates describing dynamic limitations.

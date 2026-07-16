@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/vtrpza/reconctx/internal/canonical"
 	"github.com/vtrpza/reconctx/internal/model"
+	"github.com/vtrpza/reconctx/internal/preflight"
 )
 
 func PlanDigest(plan model.Plan) (string, error) {
@@ -26,6 +28,7 @@ func PlanDigest(plan model.Plan) (string, error) {
 		Tools                  []model.ToolPlan `json:"tools"`
 		Limits                 model.PlanLimits `json:"limits"`
 		EnvironmentAllowlist   []string         `json:"environment_allowlist"`
+		Environment            []string         `json:"environment"`
 		WorkspaceRoot          string           `json:"workspace_root"`
 	}{
 		PlanVersion:            plan.PlanVersion,
@@ -35,6 +38,7 @@ func PlanDigest(plan model.Plan) (string, error) {
 		Tools:                  plan.Tools,
 		Limits:                 plan.Limits,
 		EnvironmentAllowlist:   plan.EnvironmentAllowlist,
+		Environment:            plan.Environment,
 		WorkspaceRoot:          plan.WorkspaceRoot,
 	}
 	encoded, err := canonical.Marshal(behavior)
@@ -58,19 +62,29 @@ func validatePlan(plan model.Plan) error {
 	if !filepath.IsAbs(plan.WorkspaceRoot) || filepath.Clean(plan.WorkspaceRoot) != plan.WorkspaceRoot || strings.ContainsRune(plan.WorkspaceRoot, '\x00') {
 		return errors.New("workspace root must be an absolute clean path")
 	}
-	if strings.TrimSpace(plan.Inputs.Target) == "" || len(plan.Inputs.Seeds) == 0 || plan.Inputs.ScopePath == "" || plan.Inputs.Profile == "" {
+	if strings.TrimSpace(plan.Inputs.Target) == "" || strings.ContainsAny(plan.Inputs.Target, "/\\?#@:") || len(plan.Inputs.Seeds) == 0 || plan.Inputs.ScopePath == "" || plan.Inputs.Profile == "" {
 		return errors.New("plan inputs are incomplete")
 	}
-	if !safeOutputPath(plan.Inputs.ScopePath) || !validDigest(plan.Inputs.ScopeSHA256) {
-		return errors.New("scope path or digest is invalid")
+	if !safeOutputPath(plan.Inputs.ScopePath) || !validDigest(plan.Inputs.ScopeSHA256) || !filepath.IsAbs(plan.Inputs.WordlistPath) || filepath.Clean(plan.Inputs.WordlistPath) != plan.Inputs.WordlistPath || strings.ContainsRune(plan.Inputs.WordlistPath, '\x00') || !validDigest(plan.Inputs.WordlistSHA256) {
+		return errors.New("scope or wordlist path/digest is invalid")
 	}
+	target, err := canonical.CanonicalizeURL("https://" + plan.Inputs.Target + "/")
+	if err != nil || target.Host != plan.Inputs.Target {
+		return errors.New("target is not a canonical host name")
+	}
+	targetSeedFound := false
 	for index, seed := range plan.Inputs.Seeds {
-		if _, err := canonical.CanonicalizeURL(seed); err != nil {
+		value, err := canonical.CanonicalizeURL(seed)
+		if err != nil {
 			return fmt.Errorf("seed %d: %w", index+1, err)
 		}
+		targetSeedFound = targetSeedFound || value.Host == target.Host
 	}
-	if plan.Limits.ArjunMaxTargets < 0 {
-		return errors.New("global limits must not be negative")
+	if !targetSeedFound {
+		return errors.New("target host does not match an approved seed host")
+	}
+	if plan.Limits.ArjunMaxTargets < 0 || plan.Limits.ArjunRequestBudget <= 0 {
+		return errors.New("global limits are invalid")
 	}
 	if len(plan.Tools) == 0 {
 		return errors.New("plan requires at least one tool")
@@ -105,10 +119,9 @@ func validatePlan(plan model.Plan) error {
 			}
 		}
 	}
-	for _, key := range plan.EnvironmentAllowlist {
-		if key == "" || strings.ContainsAny(key, "=\x00") {
-			return fmt.Errorf("invalid environment allowlist key %q", key)
-		}
+	effectiveEnvironment, err := preflight.CaptureEnvironment(plan.Environment, plan.EnvironmentAllowlist)
+	if err != nil || !slices.Equal(effectiveEnvironment, plan.Environment) {
+		return errors.New("environment is not the canonical allowlisted snapshot")
 	}
 	return nil
 }
@@ -150,5 +163,5 @@ func validDigest(value string) bool {
 		return false
 	}
 	_, err := hex.DecodeString(hexDigest)
-	return err == nil
+	return err == nil && hexDigest == strings.ToLower(hexDigest)
 }

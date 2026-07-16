@@ -1,6 +1,6 @@
 # Pipeline DAG and Approval Semantics v0
 
-**Status:** approved discovery contract  
+**Status:** implemented v0.1 contract; operator acceptance and publication remain pending
 **Profile:** `web-blackbox`  
 **Control mode:** operator-run artifact producer  
 **Approved decisions:** `docs/product-decisions-v0.md`
@@ -13,7 +13,7 @@ Operator starts CLI
   → operator approves collection phase
   → CLI supervises approved GAU/Katana subprocesses
   → CLI normalizes and renders exact Arjun queue
-  → operator approves, edits, skips, or cancels Arjun phase
+  → operator approves, skips, or cancels Arjun phase
   → CLI supervises only approved Arjun subprocesses
   → CLI compiles a portable evidence handoff
   → operator gives the handoff to an agent
@@ -27,7 +27,7 @@ During product discovery, Hermes prepares and validates offline artifacts, but t
 
 ```text
                                OFFLINE / LOCAL-ONLY
-Target + seeds + scope + profile ──► validate inputs
+Target + seeds + scope + wordlist + profile ──► validate inputs
                                       │
                                       ▼
                           resolve paths + versions
@@ -55,7 +55,7 @@ Target + seeds + scope + profile ──► validate inputs
                                       ▼
                     ┌── APPROVAL B: ARJUN QUEUE ──┐
                     │                             │
-                  skip/edit                     approve
+                 skip/cancel                    approve
                     │                             │
                     │                             ▼
                     │                 bounded Arjun executions
@@ -80,7 +80,7 @@ Only the two tool branches in the diagram can perform target/provider network ac
 
 | Phase | Activity | Network | Approval | Output |
 |---|---|---:|---|---|
-| P0 input validation | offline | no | none | parsed target/scope/profile |
+| P0 input validation | offline | no | none | parsed target/scope/wordlist/profile |
 | P1 preflight | local | no target traffic | none | paths, versions, writable workspace |
 | P2 plan render | offline | no | none | immutable plan + digest |
 | P3 initial collection | mixed | GAU provider + Katana target | Approval A | raw tool artifacts |
@@ -91,7 +91,7 @@ Only the two tool branches in the diagram can perform target/provider network ac
 | P8 handoff compile | offline | no | none | `CONTEXT.md`, JSONL, manifest, raw selection |
 | P9 integrity validation | offline | no | none | schema/ref/hash/checksum result |
 
-`build` and `ingest` are offline commands and never inherit permission to start collection tools.
+`build` is offline and never inherits permission to start collection tools.
 
 ## 4. Run state machine
 
@@ -118,7 +118,7 @@ planned
 
 Run status and tool status are independent. One failed ToolExecution can produce a `partial` run while valid observations from another execution remain available.
 
-Intentional Arjun skip produces a successful collection-only run when initial collection completed. The skipped ToolExecution/phase and resulting coverage gap remain explicit.
+Intentional Arjun skip produces a collection-only handoff when initial collection completed. No Arjun ToolExecution is created; the phase/run coverage gap remains explicit and the handoff status is `partial`.
 
 ## 5. Plan artifact
 
@@ -133,6 +133,8 @@ inputs:
   seeds: [...]
   scope_path: scope.yaml
   scope_sha256: ...
+  wordlist_path: /absolute/private/workspace/runs/run_.../inputs/wordlist.txt
+  wordlist_sha256: sha256:...
   profile: web-blackbox
 canonicalization_policy: url-canonicalization/v0
 schema_version: reconctx/v0
@@ -155,25 +157,31 @@ tools:
     timeout_seconds: 10
 limits:
   arjun_max_targets: 25
+  arjun_request_budget: ...
+environment_allowlist: [LANG, PATH, TZ]
+environment: [LANG=C.UTF-8, PATH=/approved/bin:/usr/bin, TZ=UTC]
 workspace_root: /absolute/no-symlink/path
 plan_digest: sha256:...
 ```
 
 Arguments are stored as arrays and executed without shell interpolation. A separate redacted display form is generated for logs/handoff.
 
+Planning copies the bounded source wordlist byte-for-byte into that private run path before persisting the plan. The private copy, not the caller's source path, is hash-bound and used for later approval, resume, and Arjun execution.
+
 `plan_digest` is SHA-256 over canonical JSON of all behavior-bearing fields. Cosmetic labels and terminal formatting do not enter the digest.
 
 ## 6. Approval A — initial collection
 
-Before approval, the CLI displays:
+Before approval, the CLI terminal display includes:
 
-- target, seeds, and canonical scope roots/exclusions;
-- every tool path and observed version;
+- target and canonical seeds;
+- scope path/hash, profile, wordlist path/hash, and canonicalization/schema policies;
+- every tool path, metadata-derived version, and binary hash/mode/UID/GID/device/inode;
 - activity class for each tool;
 - exact effective argv in shell-escaped display form;
-- rate, concurrency, parallelism, timeout, and retry policy;
+- per-tool rate, concurrency, parallelism, and timeout plus global Arjun ceilings/request budget;
 - expected output paths;
-- workspace path and raw policy;
+- workspace path, environment allowlist, and exact effective environment values;
 - plan digest.
 
 Approval authorizes exactly the displayed digest. It does not authorize later commands or broader scope.
@@ -184,18 +192,18 @@ A new approval is mandatory when any of these change:
 
 - target, seed, scope rule, or scope digest;
 - tool path or version;
-- argv or environment allowlist;
+- argv, environment allowlist, or effective environment value;
 - activity classification;
-- rate, concurrency, parallelism, timeout, or retry;
+- rate, concurrency, parallelism, or timeout;
 - output/workspace path;
 - enabled tool;
 - canonicalization/schema version in behavior-bearing output.
 
-A missing tool may produce a reduced replacement plan, but the reduced plan receives a new digest and cannot reuse the previous approval.
+A missing or unsupported tool fails planning; v0.1.0 does not silently produce a reduced plan.
 
 ## 7. Initial collection execution
 
-GAU and Katana are independent branches and may run concurrently after Approval A.
+GAU and each Katana seed execute sequentially in immutable plan order after Approval A.
 
 ### Isolation
 
@@ -207,9 +215,10 @@ runs/<run-id>/executions/<tx-id>/
 ├── version.txt
 ├── stdout.raw
 ├── stderr.raw
-├── native/
+├── native-output.*
 ├── environment.safe.json
 ├── process-status.json
+├── artifact-envelope.json
 └── checksums.sha256
 ```
 
@@ -221,13 +230,13 @@ The runner never reuses an output path. This avoids GAU's append behavior and ma
 - Katana receives a tool-native crawl-scope constraint as defense in depth.
 - Discovered out-of-scope/unknown URLs may be recorded but are never scheduled.
 - GAU historical output may contain out-of-scope references; they remain record-only.
-- Redirect destinations are re-evaluated before scheduling any new request.
+- Reconctx scope-checks every seed and generated Arjun candidate; tool-internal redirect behavior remains a documented residual risk.
 
 ### Capture
 
-- stdout, stderr, native output, timestamps, exit code, resolved path, version, and redacted command are preserved independently;
-- raw files are append-only during the process and immutable after final hash;
-- parser failure never deletes raw data;
+- stdout, stderr, and native output are captured independently under the applicable approved byte, record, and line limits; timestamps, exit code, resolved path, version, and redacted command are preserved separately;
+- finalized captures are immutable after hashing; a capture-limit truncation is recorded on the artifact and forces partial execution/run coverage;
+- parser failure never deletes the bounded captured bytes;
 - target output is untrusted data.
 
 ## 8. Retry and timeout policy
@@ -272,8 +281,6 @@ On first Ctrl-C:
 9. mark affected executions and run `interrupted`;
 10. do not auto-resume.
 
-A second Ctrl-C shortens the grace period but still attempts minimal process-status persistence.
-
 The runner launches children in isolated process groups and never through a shell. Completion requires a child-process leak check.
 
 ## 10. Normalization and correlation
@@ -283,7 +290,7 @@ Normalization consumes immutable artifact snapshots and emits schema v0 records.
 Required order:
 
 1. validate artifact hash/size;
-2. parse record with a bounded streaming parser;
+2. parse the bounded in-memory artifact with format-specific validation;
 3. preserve raw locator;
 4. canonicalize URL under the recorded policy;
 5. evaluate scope;
@@ -335,7 +342,7 @@ Each line includes:
 - scope decision;
 - inclusion/exclusion reason codes;
 - rank components;
-- rendered argv;
+- redacted public argv;
 - estimated request budget;
 - candidate policy version.
 
@@ -343,29 +350,25 @@ The selected queue is capped before Approval B. Excluded overflow remains visibl
 
 ## 12. Approval B — parameter discovery
 
-The CLI displays:
+The CLI terminal display includes:
 
-- included/excluded counts and ceiling;
+- included count and target ceiling;
 - exact ordered targets;
-- URL, method, body/location mode;
-- source/ranking explanation;
-- effective command per target;
-- wordlist identity/hash;
-- rate, threads, timeout;
-- worst-case request estimate;
+- URL, method, location, rank, and Evidence IDs;
+- exact private wordlist and native-output paths;
+- exact effective argv per target, including executable path, rate, threads, and timeout;
+- per-candidate request budget;
 - candidate queue digest.
+
+The private immutable queue retains the exact execution bindings used by the digest. The portable candidate-decision artifact retains the wordlist hash, included and excluded policy decisions, rank inputs/reasons, scope decisions, source observations/executions, and a redacted argv that replaces the executable, wordlist, and native-output paths.
 
 The operator may:
 
 - approve the whole displayed queue;
-- remove candidates;
-- lower rates/threads/timeouts;
 - skip Arjun;
 - cancel the run.
 
-Editing produces a new queue and digest. Approval authorizes only that digest.
-
-Adding candidates, increasing limits, changing method/location/wordlist, or changing effective commands invalidates Approval B. Removing candidates or lowering intensity still produces a new digest and an explicit approval record; approval is never inferred.
+v0.1.0 does not edit or reorder the generated queue. Any candidate, limit, method/location, wordlist, request-budget, or effective-command change requires a new reviewed plan/run. Approval authorizes only the displayed queue digest.
 
 ## 13. Arjun execution
 
@@ -380,18 +383,14 @@ Adding candidates, increasing limits, changing method/location/wordlist, or chan
 
 ## 14. Resume
 
-Resume is operator-initiated and manifest-driven.
+Resume is operator-initiated and fail-closed. v0.1.0 supports only these persisted checkpoints:
 
-- verify existing artifact hashes first;
-- never reopen finalized artifacts for append;
-- keep completed ToolExecutions unchanged;
-- create new IDs/directories for retried executions;
-- rebuild normalized views deterministically from all selected execution records;
-- re-render candidate policy when upstream observations change;
-- invalidate Approval B if its queue digest changes;
-- preserve earlier approval records and explain supersession.
+- `planned` and `awaiting_collection_approval`: revalidate the immutable plan and require a fresh collection decision before network activity;
+- `awaiting_arjun_approval`: revalidate the plan, scope, wordlist, workflow, immutable queue, and digest, then require a fresh Arjun decision;
+- `compiling`: complete or verify the handoff offline;
+- `success`: verify the existing handoff and report its path.
 
-Resume without new network activity—normalization or handoff rebuild—requires no approval. Any resumed network phase requires a still-valid matching approval or a new approval.
+Persisted in-flight collection, normalization, or Arjun states are not retried. Failed, partial, interrupted, cancelled, and preflight-failed states are terminal for `resume`; they require a new reviewed plan. The separate offline `build` command may compile a valid persisted workflow from a supported compilable state.
 
 ## 15. Partial success matrix
 
@@ -403,19 +402,19 @@ Resume without new network activity—normalization or handoff rebuild—require
 | unsupported native format | `unsupported_format` | preserve raw; do not invent observations; run partial if other facts exist |
 | Arjun target timeout | target ToolExecution timed out | continue approved remaining targets; run partial |
 | Arjun explicit zero | `success_zero`, coverage zero | continue; preserve stdout Evidence |
-| operator skips Arjun | skipped | successful collection-only handoff with explicit parameter-discovery gap |
-| cancellation | interrupted | stop children; preserve partial; compile only by later explicit offline build/resume |
+| operator skips Arjun | no Arjun ToolExecution | collection-only `partial` handoff with explicit parameter-discovery gap |
+| cancellation | interrupted | stop children; preserve partial; compile only by a later explicit offline `build` when a valid workflow exists |
 | no valid observations | failed or partial with zero facts | preserve manifest/raw; do not emit a misleading success handoff |
 | handoff integrity failure | compile failed | retain workspace; package is not deliverable until rebuilt and verified |
 
 ## 16. Handoff compile and integrity gate
 
-Compilation is offline and rebuildable. Default raw policy:
+Compilation is offline and rebuildable. v0.1.0 raw policy:
 
-- private workspace keeps complete raw artifacts;
-- handoff copies only evidence-referenced sanitized artifacts;
-- omissions/references are explicit in manifest;
-- full raw is opt-in.
+- private workspace keeps the bounded captures; byte, record, or line limits may truncate them and mark execution/run coverage partial;
+- the persisted workflow's raw sources are embedded byte-for-byte only after secret and private-path admission checks; a failed check blocks compilation rather than producing a derived redaction;
+- the handoff manifest records `raw_policy: embedded_sanitized` for scan-admitted raw sources and `omitted` when the workflow requires no embedded raw bytes;
+- v0 does not generate redacted raw derivatives and has no unredacted/full-raw inclusion option.
 
 Delivery requires all of:
 
@@ -435,29 +434,30 @@ Each approval record contains:
 
 - approval phase;
 - approved digest;
-- operator identity label (`operator`, not an external credential);
+- private operator label, trimmed and currently limited to 1–128 bytes with Unicode control and format characters rejected;
 - timestamp;
-- exact scope/profile/tool/candidate versions;
-- decision: approve, edit, skip, cancel;
-- superseded approval reference when applicable.
+- decision: approve, skip, or cancel as permitted by the phase.
 
 Approval records remain private run evidence. The handoff may expose redacted approval status/digest but not terminal identity or sensitive paths.
 
 ## 18. CLI implications
 
-Conceptual commands:
+Implemented commands:
 
 ```bash
-reconctx plan --target fixture.test --scope scope.yaml \
-  --profile web-blackbox --out run-plan.yaml
+reconctx plan --target fixture.test --seed http://fixture.test:18080/ \
+  --scope scope.yaml --wordlist /absolute/private/params.txt \
+  --profile web-blackbox --workspace /absolute/private/reconctx-work \
+  --out run-plan.json
 
-reconctx run run-plan.yaml
+reconctx run /absolute/private/reconctx-work/run-plan.json
 # displays Approval A and later pauses for Approval B
 
-reconctx resume <run-id>
-# validates manifests; asks only if network work remains
+reconctx resume --workspace /absolute/private/reconctx-work <run-id>
+# continues only a supported approval/compile checkpoint
 
-reconctx build --run <run-id> --profile compact --out handoff/<run-id>
+reconctx build --workspace /absolute/private/reconctx-work \
+  --run <run-id> --out handoff/<run-id>
 # offline only
 ```
 
@@ -475,4 +475,4 @@ Pipeline/approval gate is closed when:
 - no agent control plane exists;
 - active discovery execution remains operator-controlled.
 
-This document satisfies those criteria for discovery v0. All discovery gates and the final implementation plan are complete; production code remains blocked only by explicit operator approval.
+G1–G3 implementation is present. G4 operator loopback acceptance and G5 artifact-specific publication approval remain open; this document does not authorize either gate.

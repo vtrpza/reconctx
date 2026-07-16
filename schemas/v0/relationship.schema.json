@@ -5,7 +5,7 @@
   "properties": {
     "attributes": {
       "additionalProperties": {
-        "oneOf": [
+        "anyOf": [
           {
             "type": "string"
           },

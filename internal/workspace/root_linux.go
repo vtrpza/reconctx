@@ -18,8 +18,6 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const maxReadFileBytes = 16 << 20
-
 type Root struct {
 	mu   sync.RWMutex
 	path string
@@ -151,7 +149,7 @@ func (root *Root) ReadFile(name string) ([]byte, error) {
 		return nil, fmt.Errorf("read %q: %w", name, err)
 	}
 	file := os.NewFile(uintptr(fd), base)
-	content, readErr := io.ReadAll(io.LimitReader(file, maxReadFileBytes+1))
+	content, readErr := io.ReadAll(io.LimitReader(file, MaxFileBytes+1))
 	closeErr := file.Close()
 	if readErr != nil {
 		return nil, fmt.Errorf("read %q: %w", name, readErr)
@@ -159,7 +157,7 @@ func (root *Root) ReadFile(name string) ([]byte, error) {
 	if closeErr != nil {
 		return nil, fmt.Errorf("close %q: %w", name, closeErr)
 	}
-	if len(content) > maxReadFileBytes {
+	if len(content) > MaxFileBytes {
 		return nil, fmt.Errorf("read %q: %w", name, ErrTooLarge)
 	}
 	if err := root.revalidateLocked(); err != nil {

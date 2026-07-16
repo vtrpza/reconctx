@@ -19,6 +19,7 @@ SCHEMA_FILES = [
     "relationship.schema.json",
     "record.schema.json",
     "handoff-manifest.schema.json",
+    "arjun-candidate.schema.json",
 ]
 HEX0 = "0" * 64
 HEX1 = "1" * 64
@@ -37,6 +38,7 @@ class SchemaV0Tests(unittest.TestCase):
             registry = registry.with_resource(
                 schema["$id"], Resource.from_contents(schema)
             )
+        cls.registry = registry
         cls.validator = Draft202012Validator(
             cls.schemas["record.schema.json"],
             registry=registry,
@@ -98,6 +100,36 @@ class SchemaV0Tests(unittest.TestCase):
         errors = list(self.validator.iter_errors(asset))
         self.assertTrue(errors)
 
+    def test_artifact_paths_reject_line_terminators(self):
+        execution = next(
+            item
+            for item in self._valid_records()
+            if item["record_type"] == "tool_execution"
+        )
+        execution["artifacts"][0]["path"] = "raw/unsafe\nname"
+        self.assertTrue(list(self.validator.iter_errors(execution)))
+
+    def test_relationship_attributes_allow_integer_values(self):
+        relationship = next(
+            item
+            for item in self._valid_records()
+            if item["record_type"] == "relationship"
+        )
+        relationship["attributes"] = {"count": 1}
+        self.validator.validate(relationship)
+
+    def test_material_entities_require_observations_and_evidence(self):
+        for record_type in ("asset", "endpoint", "parameter"):
+            for field in ("observation_ids", "evidence_ids"):
+                with self.subTest(record_type=record_type, field=field):
+                    record = next(
+                        item
+                        for item in self._valid_records()
+                        if item["record_type"] == record_type
+                    )
+                    record[field] = []
+                    self.assertTrue(list(self.validator.iter_errors(record)))
+
     def test_auth_context_is_opaque_and_never_a_raw_secret(self):
         observation = next(
             item
@@ -119,10 +151,65 @@ class SchemaV0Tests(unittest.TestCase):
                 / "manifest.json"
             ).read_text()
         )
-        Draft202012Validator(
+        validator = Draft202012Validator(
             self.schemas["handoff-manifest.schema.json"],
             format_checker=FormatChecker(),
-        ).validate(manifest)
+        )
+        validator.validate(manifest)
+
+        manifest["raw_policy"] = "embedded_unredacted"
+        self.assertTrue(list(validator.iter_errors(manifest)))
+
+    def test_redacted_arjun_candidate_decision_validates(self):
+        candidate = {
+            "schema_version": "reconctx/v0",
+            "record_type": "arjun_candidate",
+            "candidate_policy_version": "arjun-candidate-policy/v0",
+            "queue_digest": f"sha256:{HEX0}",
+            "candidate_id": f"candidate_sha256_{HEX0}",
+            "endpoint_id": f"ep_sha256_{HEX0}",
+            "selected_url": "https://fixture.test/api/search",
+            "canonical_route_url": "https://fixture.test/api/search",
+            "method": "GET",
+            "source_mode": "GET",
+            "location": "query",
+            "eligible": True,
+            "included": True,
+            "reason_codes": ["selected"],
+            "rank_inputs": {
+                "currently_observed_by_katana": True,
+                "existing_query_name_evidence": True,
+                "api_like_path": True,
+                "independent_source_executions": 2,
+                "no_static_extension": True,
+                "supported_method_location": True,
+            },
+            "rank_position": 1,
+            "observation_ids": [f"obs_sha256_{HEX1}"],
+            "evidence_ids": [f"ev_sha256_{HEX1}"],
+            "source_execution_ids": ["tx_katana"],
+            "scope_decision": {
+                "classification": "in_scope",
+                "rule_id": "fixture",
+                "reason": "origin allowlist root matched",
+            },
+            "argv_redacted": [
+                "<ARJUN>", "-u", "https://fixture.test/api/search",
+                "-m", "GET", "-w", "<WORDLIST>", "-oJ", "<NATIVE_OUTPUT>",
+            ],
+            "wordlist_sha256": f"sha256:{HEX2}",
+            "request_budget": 100,
+            "max_targets": 25,
+        }
+        validator = Draft202012Validator(
+            self.schemas["arjun-candidate.schema.json"],
+            registry=self.registry,
+            format_checker=FormatChecker(),
+        )
+        validator.validate(candidate)
+
+        candidate["source_mode"] = "JSON"
+        self.assertTrue(list(validator.iter_errors(candidate)))
 
     @staticmethod
     def _valid_records():

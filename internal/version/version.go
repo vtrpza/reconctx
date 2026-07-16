@@ -1,3 +1,4 @@
 package version
 
-const Version = "0.0.0-dev"
+// Version is replaced by -ldflags at release build time.
+var Version = "0.0.0-dev"

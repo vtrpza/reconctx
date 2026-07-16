@@ -55,7 +55,7 @@
       "type": "object"
     },
     "entrypoint": {
-      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+      "pattern": "^(?:[^/\r\n\u2028\u2029]|[^./\r\n\u2028\u2029][^/\r\n\u2028\u2029]|\\.[^./\r\n\u2028\u2029]|[^/\r\n\u2028\u2029]{3,})(?:/(?:[^/\r\n\u2028\u2029]|[^./\r\n\u2028\u2029][^/\r\n\u2028\u2029]|\\.[^./\r\n\u2028\u2029]|[^/\r\n\u2028\u2029]{3,}))*$",
       "type": "string"
     },
     "example_kind": {
@@ -73,7 +73,7 @@
             "type": "string"
           },
           "path": {
-            "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+            "pattern": "^(?:[^/\r\n\u2028\u2029]|[^./\r\n\u2028\u2029][^/\r\n\u2028\u2029]|\\.[^./\r\n\u2028\u2029]|[^/\r\n\u2028\u2029]{3,})(?:/(?:[^/\r\n\u2028\u2029]|[^./\r\n\u2028\u2029][^/\r\n\u2028\u2029]|\\.[^./\r\n\u2028\u2029]|[^/\r\n\u2028\u2029]{3,}))*$",
             "type": "string"
           },
           "role": {
@@ -119,7 +119,6 @@
     "raw_policy": {
       "enum": [
         "embedded_sanitized",
-        "embedded_unredacted",
         "referenced",
         "omitted"
       ]
@@ -136,7 +135,6 @@
         "minLength": 1,
         "type": "string"
       },
-      "minItems": 1,
       "type": "array",
       "uniqueItems": true
     },

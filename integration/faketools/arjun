@@ -1,4 +1,5 @@
 #!/bin/sh
+# reconctx-tool-metadata/v0 name=arjun version=2.2.7
 set -eu
 [ "$#" -eq 1 ] && [ "$1" = "--version" ]
 [ -z "${PYTHONHOME+x}" ]

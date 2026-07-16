@@ -4,9 +4,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime/debug"
+	"strings"
 	"testing"
 )
 
@@ -95,6 +98,21 @@ func TestPreflightFiltersEnvironmentByExplicitAllowlist(t *testing.T) {
 	}
 }
 
+func TestPreflightCapturesCanonicalPATH(t *testing.T) {
+	base := []string{"PATH=/first::/second:/first", "LANG=C.UTF-8", "HOME=/private"}
+	got, err := CaptureEnvironment(base, []string{"PATH", "LANG"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"LANG=C.UTF-8", "PATH=/first:/second"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("captured environment = %#v, want %#v", got, want)
+	}
+	if _, err := CaptureEnvironment([]string{"PATH=relative:/bin"}, []string{"PATH"}); err == nil {
+		t.Fatal("relative PATH entry was approved")
+	}
+}
+
 func TestPreflightParsesAnchoredToolVersions(t *testing.T) {
 	tests := []struct {
 		tool   string
@@ -104,6 +122,7 @@ func TestPreflightParsesAnchoredToolVersions(t *testing.T) {
 		{"gau", "gau version 2.2.4\n", "2.2.4"},
 		{"katana", "v1.6.1\n", "v1.6.1"},
 		{"arjun", "arjun=2.2.7\npython=3.13.5\n", "2.2.7"},
+		{"arjun", "v2.2.7\n", "2.2.7"},
 	}
 	for _, test := range tests {
 		got, err := ParseVersion(test.tool, test.output)
@@ -116,7 +135,86 @@ func TestPreflightParsesAnchoredToolVersions(t *testing.T) {
 	}
 }
 
-func TestPreflightProbesOnlyVersionCommands(t *testing.T) {
+func TestPreflightReadsBoundArjunMetadataWithoutStartingEntrypoint(t *testing.T) {
+	prefix := t.TempDir()
+	if err := os.Chmod(prefix, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	bin := filepath.Join(prefix, "bin")
+	metadata := filepath.Join(prefix, "lib", "python3.13", "site-packages", "arjun-2.2.7.dist-info")
+	if err := os.MkdirAll(bin, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(metadata, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	sentinel := filepath.Join(prefix, "started")
+	interpreter := filepath.Join(bin, "python3")
+	if err := os.WriteFile(interpreter, []byte(fmt.Sprintf("#!/bin/sh\nprintf started > %q\n", sentinel)), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	entrypoint := filepath.Join(bin, "arjun")
+	wrapper := fmt.Sprintf("#!%s\nfrom arjun.__main__ import main\nmain()\n", interpreter)
+	if err := os.WriteFile(entrypoint, []byte(wrapper), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(metadata, "METADATA"), []byte("Metadata-Version: 2.1\nName: arjun\nVersion: 2.2.7\n\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	result, err := InspectTool(context.Background(), "arjun", entrypoint, []string{"PATH=" + bin}, []string{"PATH"})
+	if err != nil || result.Version != "2.2.7" {
+		t.Fatalf("InspectTool(arjun) = %#v, %v", result, err)
+	}
+	if _, err := os.Stat(sentinel); !os.IsNotExist(err) {
+		t.Fatalf("Arjun entrypoint was started during preflight: %v", err)
+	}
+}
+
+func TestPreflightUsesApprovedPATHAndDoesNotStartWrapper(t *testing.T) {
+	directory := t.TempDir()
+	if err := os.Chmod(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	sentinel := filepath.Join(directory, "started")
+	tool := filepath.Join(directory, "gau")
+	content := fmt.Sprintf("#!/bin/sh\n# reconctx-tool-metadata/v0 name=gau version=2.2.4\nprintf started > %q\n", sentinel)
+	if err := os.WriteFile(tool, []byte(content), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	result, err := InspectTool(context.Background(), "gau", "gau", []string{"PATH=" + directory}, []string{"PATH"})
+	if err != nil || result.Identity.ResolvedPath != tool {
+		t.Fatalf("InspectTool(gau) = %#v, %v", result, err)
+	}
+	if _, err := os.Stat(sentinel); !os.IsNotExist(err) {
+		t.Fatalf("version wrapper was started during preflight: %v", err)
+	}
+	if _, err := InspectTool(context.Background(), "gau", "./gau", []string{"PATH=" + directory}, []string{"PATH"}); err == nil || !strings.Contains(err.Error(), "must be absolute") {
+		t.Fatalf("relative path with separator was accepted: %v", err)
+	}
+}
+
+func TestPreflightValidatesGoBuildMetadata(t *testing.T) {
+	tests := []struct{ name, main, module, version, want string }{
+		{"gau", "github.com/lc/gau/v2/cmd/gau", "github.com/lc/gau/v2", "v2.2.4", "2.2.4"},
+		{"katana", "github.com/projectdiscovery/katana/cmd/katana", "github.com/projectdiscovery/katana", "v1.6.1", "v1.6.1"},
+	}
+	for _, test := range tests {
+		info := &debug.BuildInfo{Path: test.main, Main: debug.Module{Path: test.module, Version: test.version}}
+		got, err := validateGoBuildInfo(test.name, info)
+		if err != nil || got != test.want {
+			t.Errorf("validateGoBuildInfo(%s) = %q, %v", test.name, got, err)
+		}
+	}
+	if _, err := validateGoBuildInfo("gau", &debug.BuildInfo{Path: "example.invalid/main", Main: debug.Module{Path: "github.com/lc/gau/v2", Version: "v2.2.4"}}); err == nil || !strings.Contains(err.Error(), "main package") {
+		t.Fatalf("wrong Go main package was accepted: %v", err)
+	}
+	if _, err := validateGoBuildInfo("gau", &debug.BuildInfo{Path: goMainPackages["gau"], Main: debug.Module{Path: "example.invalid/module", Version: "v2.2.4"}}); err == nil || !strings.Contains(err.Error(), "main module") {
+		t.Fatalf("wrong Go main module was accepted: %v", err)
+	}
+}
+
+func TestPreflightReadsToolMetadataWithoutExecutingCommands(t *testing.T) {
 	directory := t.TempDir()
 	if err := os.Chmod(directory, 0o700); err != nil {
 		t.Fatal(err)
@@ -150,7 +248,7 @@ func TestPreflightRejectsUnsupportedVersion(t *testing.T) {
 		t.Fatal(err)
 	}
 	tool := filepath.Join(directory, "gau")
-	if err := os.WriteFile(tool, []byte("#!/bin/sh\nprintf 'gau version 9.9.9\\n'\n"), 0o700); err != nil {
+	if err := os.WriteFile(tool, []byte("#!/bin/sh\n# reconctx-tool-metadata/v0 name=gau version=9.9.9\n"), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := InspectTool(context.Background(), "gau", tool, os.Environ(), []string{"PATH"}); err == nil {

@@ -17,9 +17,15 @@ var (
 	ErrUnsupported       = errors.New("safe rooted workspace operations are unsupported on this platform")
 )
 
+// MaxFileBytes is the largest managed file that can be read back and verified.
+const MaxFileBytes = 16 << 20
+
 // WriteFileExclusive atomically publishes a new finalized file and refuses to
 // replace any existing directory entry.
 func (root *Root) WriteFileExclusive(name string, data []byte) error {
+	if len(data) > MaxFileBytes {
+		return ErrTooLarge
+	}
 	return root.atomicWrite(name, data, false)
 }
 
@@ -28,6 +34,9 @@ func (root *Root) WriteFileExclusive(name string, data []byte) error {
 func (root *Root) ReplaceFile(name string, data []byte) error {
 	if !strings.HasPrefix(name, "state/") {
 		return ErrFinalized
+	}
+	if len(data) > MaxFileBytes {
+		return ErrTooLarge
 	}
 	return root.atomicWrite(name, data, true)
 }

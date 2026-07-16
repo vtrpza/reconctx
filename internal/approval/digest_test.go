@@ -39,12 +39,17 @@ func TestPlanDigestChangesWithBehavior(t *testing.T) {
 	}
 
 	tests := map[string]func(*model.Plan){
-		"plan version":     func(p *model.Plan) { p.PlanVersion += ".changed" },
-		"target":           func(p *model.Plan) { p.Inputs.Target += ".changed" },
+		"plan version": func(p *model.Plan) { p.PlanVersion += ".changed" },
+		"target": func(p *model.Plan) {
+			p.Inputs.Target = "other.test"
+			p.Inputs.Seeds = []string{"https://other.test/"}
+		},
 		"seeds":            func(p *model.Plan) { p.Inputs.Seeds = append(p.Inputs.Seeds, "https://other.test/") },
 		"scope path":       func(p *model.Plan) { p.Inputs.ScopePath = "other-scope.json" },
 		"scope digest":     func(p *model.Plan) { p.Inputs.ScopeSHA256 = "sha256:" + strings.Repeat("b", 64) },
 		"profile":          func(p *model.Plan) { p.Inputs.Profile += ".changed" },
+		"wordlist path":    func(p *model.Plan) { p.Inputs.WordlistPath = "/other/params.txt" },
+		"wordlist digest":  func(p *model.Plan) { p.Inputs.WordlistSHA256 = "sha256:" + strings.Repeat("b", 64) },
 		"canonical policy": func(p *model.Plan) { p.CanonicalizationPolicy += ".changed" },
 		"schema version":   func(p *model.Plan) { p.SchemaVersion += ".changed" },
 		"enabled tools":    func(p *model.Plan) { p.Tools = append(p.Tools, p.Tools[0]) },
@@ -55,6 +60,11 @@ func TestPlanDigestChangesWithBehavior(t *testing.T) {
 		},
 		"tool version":          func(p *model.Plan) { p.Tools[0].Version = "2.2.5" },
 		"binary hash":           func(p *model.Plan) { p.Tools[0].Binary.SHA256 = "sha256:" + strings.Repeat("b", 64) },
+		"binary mode":           func(p *model.Plan) { p.Tools[0].Binary.Mode = 0o700 },
+		"binary uid":            func(p *model.Plan) { p.Tools[0].Binary.UID++ },
+		"binary gid":            func(p *model.Plan) { p.Tools[0].Binary.GID++ },
+		"binary device":         func(p *model.Plan) { p.Tools[0].Binary.Device++ },
+		"binary inode":          func(p *model.Plan) { p.Tools[0].Binary.Inode++ },
 		"activity class":        func(p *model.Plan) { p.Tools[0].ActivityClass += ".changed" },
 		"argv":                  func(p *model.Plan) { p.Tools[0].Argv = append(p.Tools[0].Argv, "--subs") },
 		"rate limit":            func(p *model.Plan) { p.Tools[0].Limits.RatePerSecond++ },
@@ -62,7 +72,9 @@ func TestPlanDigestChangesWithBehavior(t *testing.T) {
 		"parallelism":           func(p *model.Plan) { p.Tools[0].Limits.Parallelism++ },
 		"timeout":               func(p *model.Plan) { p.Tools[0].Limits.TimeoutSeconds++ },
 		"global limit":          func(p *model.Plan) { p.Limits.ArjunMaxTargets++ },
+		"request budget":        func(p *model.Plan) { p.Limits.ArjunRequestBudget++ },
 		"environment allowlist": func(p *model.Plan) { p.EnvironmentAllowlist = append(p.EnvironmentAllowlist, "HTTP_PROXY") },
+		"environment value":     func(p *model.Plan) { p.Environment[0] = "LANG=pt_BR.UTF-8" },
 		"output path":           func(p *model.Plan) { p.Tools[0].OutputPaths[0] = "runs/other/stdout.raw" },
 		"workspace":             func(p *model.Plan) { p.WorkspaceRoot = "/other/work" },
 	}
@@ -110,6 +122,7 @@ func TestPlanDigestValidatesBehaviorSemantics(t *testing.T) {
 		"empty tool version":       func(p *model.Plan) { p.Tools[0].Version = "" },
 		"missing binary identity":  func(p *model.Plan) { p.Tools[0].Binary = model.ToolBinary{} },
 		"negative global limit":    func(p *model.Plan) { p.Limits.ArjunMaxTargets = -1 },
+		"zero request budget":      func(p *model.Plan) { p.Limits.ArjunRequestBudget = 0 },
 		"negative rate":            func(p *model.Plan) { p.Tools[0].Limits.RatePerSecond = -1 },
 		"negative concurrency":     func(p *model.Plan) { p.Tools[0].Limits.Concurrency = -1 },
 		"negative parallelism":     func(p *model.Plan) { p.Tools[0].Limits.Parallelism = -1 },
@@ -126,6 +139,8 @@ func TestPlanDigestValidatesBehaviorSemantics(t *testing.T) {
 		"invalid seed":             func(p *model.Plan) { p.Inputs.Seeds[0] = "not-a-url" },
 		"empty scope path":         func(p *model.Plan) { p.Inputs.ScopePath = "" },
 		"invalid scope digest":     func(p *model.Plan) { p.Inputs.ScopeSHA256 = "sha256:bad" },
+		"relative wordlist":        func(p *model.Plan) { p.Inputs.WordlistPath = "params.txt" },
+		"invalid wordlist digest":  func(p *model.Plan) { p.Inputs.WordlistSHA256 = "sha256:bad" },
 		"empty profile":            func(p *model.Plan) { p.Inputs.Profile = "" },
 		"no tools":                 func(p *model.Plan) { p.Tools = nil },
 		"empty tool name":          func(p *model.Plan) { p.Tools[0].Name = "" },
@@ -135,9 +150,13 @@ func TestPlanDigestValidatesBehaviorSemantics(t *testing.T) {
 		"zero timeout":             func(p *model.Plan) { p.Tools[0].Limits.TimeoutSeconds = 0 },
 		"empty outputs":            func(p *model.Plan) { p.Tools[0].OutputPaths = nil },
 		"empty environment key":    func(p *model.Plan) { p.EnvironmentAllowlist = append(p.EnvironmentAllowlist, "") },
-		"zero rate":                func(p *model.Plan) { p.Tools[0].Limits.RatePerSecond = 0 },
-		"zero concurrency":         func(p *model.Plan) { p.Tools[0].Limits.Concurrency = 0 },
-		"zero parallelism":         func(p *model.Plan) { p.Tools[0].Limits.Parallelism = 0 },
+		"unapproved environment":   func(p *model.Plan) { p.Environment = append(p.Environment, "HOME=/private") },
+		"unordered environment": func(p *model.Plan) {
+			p.Environment[0], p.Environment[1] = p.Environment[1], p.Environment[0]
+		},
+		"zero rate":        func(p *model.Plan) { p.Tools[0].Limits.RatePerSecond = 0 },
+		"zero concurrency": func(p *model.Plan) { p.Tools[0].Limits.Concurrency = 0 },
+		"zero parallelism": func(p *model.Plan) { p.Tools[0].Limits.Parallelism = 0 },
 		"NUL tool path": func(p *model.Plan) {
 			p.Tools[0].ResolvedPath = "/tools/\x00gau"
 			p.Tools[0].Argv[0] = p.Tools[0].ResolvedPath
@@ -185,11 +204,13 @@ func testPlan() model.Plan {
 		CanonicalizationPolicy: "url-canonicalization/v0",
 		SchemaVersion:          "reconctx/v0",
 		Inputs: model.PlanInputs{
-			Target:      "fixture.test",
-			Seeds:       []string{"https://fixture.test/"},
-			ScopePath:   "scope.json",
-			ScopeSHA256: "sha256:" + strings.Repeat("a", 64),
-			Profile:     "web-blackbox",
+			Target:         "fixture.test",
+			Seeds:          []string{"https://fixture.test/"},
+			ScopePath:      "scope.json",
+			ScopeSHA256:    "sha256:" + strings.Repeat("a", 64),
+			Profile:        "web-blackbox",
+			WordlistPath:   "/wordlists/params.txt",
+			WordlistSHA256: "sha256:" + strings.Repeat("d", 64),
 		},
 		Tools: []model.ToolPlan{{
 			Name:         "gau",
@@ -208,8 +229,9 @@ func testPlan() model.Plan {
 			Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 45},
 			OutputPaths:   []string{"runs/run_test/stdout.raw"},
 		}},
-		Limits:               model.PlanLimits{ArjunMaxTargets: 25},
+		Limits:               model.PlanLimits{ArjunMaxTargets: 25, ArjunRequestBudget: 100},
 		EnvironmentAllowlist: []string{"LANG", "TZ"},
+		Environment:          []string{"LANG=C.UTF-8", "TZ=UTC"},
 		WorkspaceRoot:        "/work",
 	}
 }

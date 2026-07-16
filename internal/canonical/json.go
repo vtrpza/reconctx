@@ -182,7 +182,7 @@ func decodeValue(decoder *json.Decoder, depth int) (any, error) {
 		}
 		return object, nil
 	case '[':
-		var array []any
+		array := make([]any, 0)
 		for decoder.More() {
 			value, err := decodeValue(decoder, depth+1)
 			if err != nil {

@@ -6,6 +6,7 @@ JSON Schema Draft 2020-12 contracts for `schema_version: reconctx/v0`.
 
 - `record.schema.json` — validates any normalized JSONL record.
 - `handoff-manifest.schema.json` — validates `manifest.json` for a packaged handoff.
+- `arjun-candidate.schema.json` — validates each redacted `arjun-candidates.jsonl` decision.
 - `common.schema.json` — shared IDs, diagnostics, scope, artifacts and locators.
 
 ## Record schemas
@@ -25,4 +26,4 @@ Normative semantics are documented in:
 - `docs/url-canonicalization-v0.md`
 - `docs/tool-contract-matrix-v0.md`
 
-Validation uses an offline registry in `tests/test_schema_v0.py`; no remote `$ref` fetch is required.
+The production compiler embeds these files and resolves their `$ref` values from an offline allowlisted loader. `tests/test_schema_v0.py` provides an independent offline-registry validation; neither path fetches remote schemas.
