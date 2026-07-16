@@ -666,6 +666,23 @@ func testRequest(output string, tool model.ToolPlan) Request {
 	}
 }
 
+func TestRunnerCreatesApprovedNestedExecutionParents(t *testing.T) {
+	workspaceRoot := privateParent(t)
+	output := filepath.Join(workspaceRoot, "runs", "run_test", "executions", "tx_fixture")
+	request := testRequest(output, runnerTestTool(t, "printf nested"))
+	request.WorkspaceRoot = workspaceRoot
+	request.Tool.OutputPaths = []string{"runs/run_test/executions/tx_fixture/stdout.raw"}
+
+	result, err := Run(context.Background(), request)
+	if err != nil || result.Envelope.Status != StatusSuccess {
+		t.Fatalf("Run() = %#v, %v", result.Envelope, err)
+	}
+	stdout, err := os.ReadFile(filepath.Join(output, "stdout.raw"))
+	if err != nil || string(stdout) != "nested" {
+		t.Fatalf("stdout = %q, %v", stdout, err)
+	}
+}
+
 func privateParent(t *testing.T) string {
 	t.Helper()
 	directory := t.TempDir()

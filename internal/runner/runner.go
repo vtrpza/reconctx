@@ -21,6 +21,7 @@ import (
 	"github.com/vtrpza/reconctx/internal/canonical"
 	"github.com/vtrpza/reconctx/internal/model"
 	"github.com/vtrpza/reconctx/internal/preflight"
+	"github.com/vtrpza/reconctx/internal/workspace"
 )
 
 type Limits struct {
@@ -81,6 +82,20 @@ func Run(ctx context.Context, request Request) (Result, error) {
 	environment, err := preflight.FilterEnvironment(request.Environment, request.EnvironmentAllowlist)
 	if err != nil {
 		return Result{}, err
+	}
+	parent, err := filepath.Rel(request.WorkspaceRoot, filepath.Dir(request.OutputDir))
+	if err != nil {
+		return Result{}, err
+	}
+	if parent != "." {
+		root, err := workspace.Open(request.WorkspaceRoot)
+		if err != nil {
+			return Result{}, err
+		}
+		err = errors.Join(root.MkdirAll(filepath.ToSlash(parent)), root.Close())
+		if err != nil {
+			return Result{}, fmt.Errorf("create execution parent: %w", err)
+		}
 	}
 	directory, err := createExecutionDir(request.OutputDir)
 	if err != nil {
