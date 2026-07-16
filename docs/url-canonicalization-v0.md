@@ -237,7 +237,7 @@ A Parameter entity represents a name/location candidate. Acceptance, reflection 
 | Parameter | deterministic rule in section 10 |
 | Evidence | SHA-256 of execution ID + artifact SHA-256 + canonical locator |
 | Observation | SHA-256 of execution ID + type + subject ID + ordered evidence IDs |
-| Relationship | SHA-256 of source ID + relationship type + target ID + ordered evidence IDs |
+| Relationship | SHA-256 of source ID + relationship type + target ID |
 
 Occurrence IDs prevent separate executions from collapsing. Deterministic entity IDs allow run-to-run correlation.
 
@@ -246,6 +246,7 @@ Occurrence IDs prevent separate executions from collapsing. Deterministic entity
 Normalization never deletes evidence.
 
 - identical entity IDs merge entity views;
+- identical relationship IDs merge evidence IDs when all other fields match;
 - each raw occurrence produces or references an Observation;
 - duplicate GAU lines remain separate evidence locators;
 - byte-identical Katana stdout and output may share one content artifact digest but preserve both artifact roles;

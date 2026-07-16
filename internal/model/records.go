@@ -307,8 +307,8 @@ type RecordSet struct {
 	Relationships  []Relationship  `json:"relationships,omitempty"`
 }
 
-// Merge coalesces deterministic entities and rejects conflicting records with
-// the same ID. Occurrence records remain distinct.
+// Merge coalesces deterministic entities and relationships and rejects
+// conflicting records with the same ID. Occurrence records remain distinct.
 func (records *RecordSet) Merge(other RecordSet) error {
 	mergedRuns, err := mergeExact(records.Runs, other.Runs, func(record RunRecord) string { return record.ID })
 	if err != nil {
@@ -377,11 +377,19 @@ func (records *RecordSet) Merge(other RecordSet) error {
 		return err
 	}
 	records.Evidence = mergedEvidence
-	mergedRelationships, err := mergeExact(records.Relationships, other.Relationships, func(record Relationship) string { return record.ID })
-	if err != nil {
-		return err
+	for _, candidate := range other.Relationships {
+		index := slices.IndexFunc(records.Relationships, func(record Relationship) bool { return record.ID == candidate.ID })
+		if index < 0 {
+			records.Relationships = append(records.Relationships, candidate)
+			continue
+		}
+		existing, incoming := records.Relationships[index], candidate
+		existing.EvidenceIDs, incoming.EvidenceIDs = nil, nil
+		if !reflect.DeepEqual(existing, incoming) {
+			return fmt.Errorf("conflicting relationship %s", candidate.ID)
+		}
+		records.Relationships[index].EvidenceIDs = union(records.Relationships[index].EvidenceIDs, candidate.EvidenceIDs)
 	}
-	records.Relationships = mergedRelationships
 	records.Sort()
 	return nil
 }

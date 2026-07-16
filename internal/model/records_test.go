@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -20,6 +21,33 @@ func TestRecordSetMergeCoalescesEntitiesAndRejectsConflicts(t *testing.T) {
 	incoming.Path = "/different"
 	if err := records.Merge(RecordSet{Endpoints: []Endpoint{incoming}}); err == nil {
 		t.Fatal("conflicting endpoint was accepted")
+	}
+}
+
+func TestRecordSetMergeCoalescesRelationshipEvidenceAndRejectsConflicts(t *testing.T) {
+	base := Relationship{
+		SchemaVersion:    SchemaVersion,
+		RecordType:       "relationship",
+		ID:               "rel_sha256_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		RunID:            "run_test",
+		RelationshipType: "has_parameter",
+		From:             EntityRef{RecordType: "endpoint", ID: "ep_1"},
+		To:               EntityRef{RecordType: "parameter", ID: "param_1"},
+		EvidenceIDs:      []string{"ev_2"},
+		Attributes:       map[string]any{},
+	}
+	records := RecordSet{Relationships: []Relationship{base}}
+	incoming := base
+	incoming.EvidenceIDs = []string{"ev_1"}
+	if err := records.Merge(RecordSet{Relationships: []Relationship{incoming}}); err != nil {
+		t.Fatal(err)
+	}
+	if got := records.Relationships[0].EvidenceIDs; !slices.Equal(got, []string{"ev_1", "ev_2"}) {
+		t.Fatalf("merged relationship evidence = %v", got)
+	}
+	incoming.To.ID = "param_2"
+	if err := records.Merge(RecordSet{Relationships: []Relationship{incoming}}); err == nil {
+		t.Fatal("conflicting relationship was accepted")
 	}
 }
 
