@@ -46,10 +46,11 @@ type ToolBinary struct {
 }
 
 type ToolLimits struct {
-	RatePerSecond  int `json:"rate_limit_per_second"`
-	Concurrency    int `json:"concurrency"`
-	Parallelism    int `json:"parallelism"`
-	TimeoutSeconds int `json:"timeout_seconds"`
+	RatePerSecond           int `json:"rate_limit_per_second"`
+	Concurrency             int `json:"concurrency"`
+	Parallelism             int `json:"parallelism"`
+	RequestTimeoutSeconds   int `json:"timeout_seconds"`
+	ExecutionTimeoutSeconds int `json:"execution_timeout_seconds"`
 }
 
 type PlanLimits struct {

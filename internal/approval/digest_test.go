@@ -70,7 +70,8 @@ func TestPlanDigestChangesWithBehavior(t *testing.T) {
 		"rate limit":            func(p *model.Plan) { p.Tools[0].Limits.RatePerSecond++ },
 		"concurrency":           func(p *model.Plan) { p.Tools[0].Limits.Concurrency++ },
 		"parallelism":           func(p *model.Plan) { p.Tools[0].Limits.Parallelism++ },
-		"timeout":               func(p *model.Plan) { p.Tools[0].Limits.TimeoutSeconds++ },
+		"timeout":               func(p *model.Plan) { p.Tools[0].Limits.RequestTimeoutSeconds++ },
+		"execution timeout":     func(p *model.Plan) { p.Tools[0].Limits.ExecutionTimeoutSeconds++ },
 		"global limit":          func(p *model.Plan) { p.Limits.ArjunMaxTargets++ },
 		"request budget":        func(p *model.Plan) { p.Limits.ArjunRequestBudget++ },
 		"environment allowlist": func(p *model.Plan) { p.EnvironmentAllowlist = append(p.EnvironmentAllowlist, "HTTP_PROXY") },
@@ -126,7 +127,13 @@ func TestPlanDigestValidatesBehaviorSemantics(t *testing.T) {
 		"negative rate":            func(p *model.Plan) { p.Tools[0].Limits.RatePerSecond = -1 },
 		"negative concurrency":     func(p *model.Plan) { p.Tools[0].Limits.Concurrency = -1 },
 		"negative parallelism":     func(p *model.Plan) { p.Tools[0].Limits.Parallelism = -1 },
-		"negative timeout":         func(p *model.Plan) { p.Tools[0].Limits.TimeoutSeconds = -1 },
+		"negative timeout":         func(p *model.Plan) { p.Tools[0].Limits.RequestTimeoutSeconds = -1 },
+		"missing execution timeout": func(p *model.Plan) {
+			p.Tools[0].Limits.ExecutionTimeoutSeconds = 0
+		},
+		"short execution timeout": func(p *model.Plan) {
+			p.Tools[0].Limits.ExecutionTimeoutSeconds = p.Tools[0].Limits.RequestTimeoutSeconds
+		},
 		"relative tool path":       func(p *model.Plan) { p.Tools[0].ResolvedPath = "tools/gau" },
 		"relative workspace":       func(p *model.Plan) { p.WorkspaceRoot = "work" },
 		"absolute output":          func(p *model.Plan) { p.Tools[0].OutputPaths[0] = "/tmp/output" },
@@ -147,7 +154,7 @@ func TestPlanDigestValidatesBehaviorSemantics(t *testing.T) {
 		"empty activity class":     func(p *model.Plan) { p.Tools[0].ActivityClass = "" },
 		"empty argv":               func(p *model.Plan) { p.Tools[0].Argv = nil },
 		"argv path mismatch":       func(p *model.Plan) { p.Tools[0].Argv[0] = "/other/gau" },
-		"zero timeout":             func(p *model.Plan) { p.Tools[0].Limits.TimeoutSeconds = 0 },
+		"zero timeout":             func(p *model.Plan) { p.Tools[0].Limits.RequestTimeoutSeconds = 0 },
 		"empty outputs":            func(p *model.Plan) { p.Tools[0].OutputPaths = nil },
 		"empty environment key":    func(p *model.Plan) { p.EnvironmentAllowlist = append(p.EnvironmentAllowlist, "") },
 		"unapproved environment":   func(p *model.Plan) { p.Environment = append(p.Environment, "HOME=/private") },
@@ -226,7 +233,7 @@ func testPlan() model.Plan {
 			},
 			ActivityClass: "passive_external",
 			Argv:          []string{"/tools/gau", "fixture.test"},
-			Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 45},
+			Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 45, ExecutionTimeoutSeconds: 900},
 			OutputPaths:   []string{"runs/run_test/stdout.raw"},
 		}},
 		Limits:               model.PlanLimits{ArjunMaxTargets: 25, ArjunRequestBudget: 100},

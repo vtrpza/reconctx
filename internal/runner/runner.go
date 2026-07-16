@@ -273,7 +273,7 @@ func validateRequest(request Request) error {
 	if len(seenOutputs) != len(approvedNative) {
 		return errors.New("approved native outputs do not match captured native outputs")
 	}
-	approvedTimeout := time.Duration(request.Tool.Limits.TimeoutSeconds) * time.Second
+	approvedTimeout := time.Duration(request.Tool.Limits.ExecutionTimeoutSeconds) * time.Second
 	limits := request.Limits
 	if limits.Timeout <= 0 || limits.Timeout > approvedTimeout || limits.GracePeriod <= 0 || limits.GracePeriod > 5*time.Second || limits.MaxStdoutBytes <= 0 || limits.MaxStdoutBytes > maxArtifactRead || limits.MaxStderrBytes <= 0 || limits.MaxStderrBytes > maxArtifactRead || limits.MaxNativeBytes <= 0 || limits.MaxNativeBytes > maxArtifactRead || limits.MaxRecords <= 0 || limits.MaxLineBytes <= 0 || int64(limits.MaxLineBytes) > limits.MaxStdoutBytes || int64(limits.MaxLineBytes) > limits.MaxStderrBytes {
 		return errors.New("invalid or unapproved runner limits")

@@ -154,7 +154,7 @@ func validateConfig(config Config) error {
 	if !filepath.IsAbs(config.ArjunPath) || !filepath.IsAbs(config.WordlistPath) || !filepath.IsAbs(config.NativeOutputRoot) {
 		return errors.New("Arjun, wordlist, and native output paths must be absolute")
 	}
-	if config.MaxTargets < 0 || config.RequestBudget <= 0 || config.Limits.RatePerSecond <= 0 || config.Limits.Concurrency <= 0 || config.Limits.Parallelism <= 0 || config.Limits.TimeoutSeconds <= 0 {
+	if config.MaxTargets < 0 || config.RequestBudget <= 0 || config.Limits.RatePerSecond <= 0 || config.Limits.Concurrency <= 0 || config.Limits.Parallelism <= 0 || config.Limits.RequestTimeoutSeconds <= 0 || config.Limits.ExecutionTimeoutSeconds <= config.Limits.RequestTimeoutSeconds {
 		return errors.New("candidate limits and request budget must be positive")
 	}
 	if !validDigest(config.WordlistSHA256) {
@@ -341,7 +341,7 @@ func renderArgv(config Config, target string, candidateMode mode, nativeOut stri
 	}
 	argv := []string{
 		config.ArjunPath, "-u", target, "-m", candidateMode.source, "-w", config.WordlistPath,
-		"--rate-limit", strconv.Itoa(config.Limits.RatePerSecond), "-t", strconv.Itoa(config.Limits.Concurrency), "-T", strconv.Itoa(config.Limits.TimeoutSeconds),
+		"--rate-limit", strconv.Itoa(config.Limits.RatePerSecond), "-t", strconv.Itoa(config.Limits.Concurrency), "-T", strconv.Itoa(config.Limits.RequestTimeoutSeconds),
 	}
 	if candidateMode.location == "form" {
 		argv = append(argv, "--headers", "Content-Type: application/x-www-form-urlencoded")

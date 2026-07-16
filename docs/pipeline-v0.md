@@ -1,6 +1,6 @@
 # Pipeline DAG and Approval Semantics v0
 
-**Status:** implemented v0.1 contract; operator acceptance passed and publication remains pending
+**Status:** implemented v0.1.1 contract; v0.1.0 acceptance remains historical evidence
 **Profile:** `web-blackbox`  
 **Control mode:** operator-run artifact producer  
 **Approved decisions:** `docs/product-decisions-v0.md`
@@ -145,6 +145,7 @@ tools:
     activity_class: passive_external
     argv: [...]
     timeout_seconds: 45
+    execution_timeout_seconds: 900
     output_paths: [...]
   - name: katana
     resolved_path: /absolute/path
@@ -155,6 +156,17 @@ tools:
     concurrency: 1
     parallelism: 1
     timeout_seconds: 10
+    execution_timeout_seconds: 7200
+  - name: arjun
+    resolved_path: /absolute/path
+    version: 2.2.7
+    activity_class: active_approved
+    argv: [...]
+    rate_limit_per_second: 1
+    concurrency: 1
+    parallelism: 1
+    timeout_seconds: 15
+    execution_timeout_seconds: 7200
 limits:
   arjun_max_targets: 25
   arjun_request_budget: ...
@@ -172,6 +184,8 @@ Planning copies the bounded source wordlist byte-for-byte into that private run 
 
 `plan_digest` is SHA-256 over canonical JSON of all behavior-bearing fields. Cosmetic labels and terminal formatting do not enter the digest.
 
+In v0.1.1, `timeout_seconds` is the HTTP request timeout passed to the scanner and `execution_timeout_seconds` is the runner's wall-clock deadline for the complete subprocess. Both are required and digest-bound. A v0.1.0 plan has no execution deadline field, fails validation closed under v0.1.1, and must be regenerated and approved; no compatibility default is inferred.
+
 ## 6. Approval A — initial collection
 
 Before approval, the CLI terminal display includes:
@@ -181,7 +195,7 @@ Before approval, the CLI terminal display includes:
 - every tool path, metadata-derived version, and binary hash/mode/UID/GID/device/inode;
 - activity class for each tool;
 - exact effective argv in shell-escaped display form;
-- per-tool rate, concurrency, parallelism, and timeout plus global Arjun ceilings/request budget;
+- per-tool rate, concurrency, parallelism, scanner request timeout, and total execution timeout plus global Arjun ceilings/request budget;
 - expected output paths;
 - workspace path, environment allowlist, and exact effective environment values;
 - plan digest.
@@ -196,12 +210,12 @@ A new approval is mandatory when any of these change:
 - tool path or version;
 - argv, environment allowlist, or effective environment value;
 - activity classification;
-- rate, concurrency, parallelism, or timeout;
+- rate, concurrency, parallelism, scanner request timeout, or total execution timeout;
 - output/workspace path;
 - enabled tool;
 - canonicalization/schema version in behavior-bearing output.
 
-A missing or unsupported tool fails planning; v0.1.0 does not silently produce a reduced plan.
+A missing or unsupported tool fails planning; v0.1.1 does not silently produce a reduced plan.
 
 ## 7. Initial collection execution
 
@@ -256,17 +270,17 @@ A retry is an explicit new ToolExecution with a new output directory. If it chan
 
 Per-request retry behavior implemented internally by a source tool must be visible in the effective command/config or documented tool default.
 
-Timeouts are phase/tool constraints, not proof that a target is absent. Timeout produces partial evidence and a diagnostic.
+Request and execution timeouts have distinct meanings. `timeout_seconds` controls the pinned scanner's native, request-oriented wait behavior; its exact semantics remain tool-specific. `execution_timeout_seconds` bounds the complete scanner subprocess, including startup and all requests. Reaching the runner deadline produces partial evidence and an execution-timeout diagnostic; it is not evidence of a request timeout or target absence.
 
 Conservative `web-blackbox` defaults:
 
-| Tool | Limit |
-|---|---|
-| Katana | depth 2, 2 req/s, concurrency 1, parallelism 1, request timeout 10s |
-| GAU | threads 1, execution/provider timeout 45s |
-| Arjun | max 25 targets, 1 req/s, threads 1, request timeout 15s |
+| Tool | Request behavior | Total execution ceiling |
+|---|---|---:|
+| GAU | threads 1, scanner timeout 45s | 900s (15 min) |
+| Katana | depth 2, 2 req/s, concurrency 1, parallelism 1, scanner timeout 10s | 7,200s (2 h) per seed/execution |
+| Arjun | max 25 targets, 1 req/s, threads 1, scanner timeout 15s | 7,200s (2 h) per candidate |
 
-Increasing these values changes the plan digest and requires approval.
+Changing either timeout changes the plan digest and requires approval. Arjun's execution timeout is also carried into the candidate queue digest used by Approval B.
 
 ## 9. Cancellation and child cleanup
 
@@ -358,7 +372,8 @@ The CLI terminal display includes:
 - exact ordered targets;
 - URL, method, location, rank, and Evidence IDs;
 - exact private wordlist and native-output paths;
-- exact effective argv per target, including executable path, rate, threads, and timeout;
+- exact effective argv per target, including executable path, rate, threads, and scanner request timeout;
+- the separate total execution timeout for each candidate;
 - per-candidate request budget;
 - candidate queue digest.
 
@@ -370,14 +385,14 @@ The operator may:
 - skip Arjun;
 - cancel the run.
 
-v0.1.0 does not edit or reorder the generated queue. Any candidate, limit, method/location, wordlist, request-budget, or effective-command change requires a new reviewed plan/run. Approval authorizes only the displayed queue digest.
+v0.1.1 does not edit or reorder the generated queue. Any candidate, limit, method/location, wordlist, request-budget, or effective-command change requires a new reviewed plan/run. Approval authorizes only the displayed queue digest.
 
 ## 13. Arjun execution
 
 - only approved queue entries are scheduled;
 - each target gets an independent ToolExecution or recoverable execution boundary;
 - concurrency defaults to one target at a time in v0;
-- target failure/timeout does not invalidate successful targets;
+- target failure/execution timeout does not invalidate successful targets;
 - absent native JSON plus explicit normal zero stdout is `success_zero`, not failure;
 - detected parameters are candidates, not proof of completeness or vulnerability;
 - method and parameter location remain explicit;
@@ -385,7 +400,7 @@ v0.1.0 does not edit or reorder the generated queue. Any candidate, limit, metho
 
 ## 14. Resume
 
-Resume is operator-initiated and fail-closed. v0.1.0 supports only these persisted checkpoints:
+Resume is operator-initiated and fail-closed. v0.1.1 supports only these persisted checkpoints:
 
 - `planned` and `awaiting_collection_approval`: revalidate the immutable plan and require a fresh collection decision before network activity;
 - `awaiting_arjun_approval`: revalidate the plan, scope, wordlist, workflow, immutable queue, and digest, then require a fresh Arjun decision;
@@ -402,7 +417,7 @@ Persisted in-flight collection, normalization, or Arjun states are not retried. 
 | Katana fails, GAU succeeds | Katana failed; GAU success | continue normalization; default Arjun queue empty because historical-only; handoff `partial` |
 | provider error + GAU exit 0 | semantic status partial/unknown | preserve records, provider diagnostics and coverage gap |
 | unsupported native format | `unsupported_format` | preserve raw; do not invent observations; run partial if other facts exist |
-| Arjun target timeout | target ToolExecution timed out | continue approved remaining targets; run partial |
+| Arjun execution timeout | target ToolExecution reached its approved wall-clock deadline | continue approved remaining targets; run partial |
 | Arjun explicit zero | `success_zero`, coverage zero | continue; preserve stdout Evidence |
 | operator skips Arjun | no Arjun ToolExecution | collection-only `partial` handoff with explicit parameter-discovery gap |
 | cancellation | interrupted | stop children; preserve partial; compile only by a later explicit offline `build` when a valid workflow exists |
@@ -411,7 +426,7 @@ Persisted in-flight collection, normalization, or Arjun states are not retried. 
 
 ## 16. Handoff compile and integrity gate
 
-Compilation is offline and rebuildable. v0.1.0 raw policy:
+Compilation is offline and rebuildable. v0.1.1 raw policy:
 
 - private workspace keeps the bounded captures; byte, record, or line limits may truncate them and mark execution/run coverage partial;
 - the persisted workflow's raw sources are embedded byte-for-byte only after secret and private-path admission checks; a failed check blocks compilation rather than producing a derived redaction;
@@ -472,9 +487,9 @@ Pipeline/approval gate is closed when:
 - the two approval digests and invalidation rules are accepted;
 - every network-producing node is downstream of an approval;
 - candidate ranking and ceilings are deterministic;
-- retry, timeout, cancellation, resume, and partial-success semantics are explicit;
+- retry, request/execution timeout, cancellation, resume, and partial-success semantics are explicit;
 - handoff build is offline and integrity-gated;
 - no agent control plane exists;
 - active discovery execution remains operator-controlled.
 
-G1–G3 implementation is present and [G4 operator loopback acceptance](g4-acceptance-v0.1.0.md) passed. G5 artifact-specific publication approval remains open; this document does not authorize publication.
+G1–G3 implementation is present and the [v0.1.0 G4 operator loopback acceptance](g4-acceptance-v0.1.0.md) remains historical evidence. The v0.1.1 timeout correction requires fresh release verification and artifact-specific approval; this document does not authorize publication.

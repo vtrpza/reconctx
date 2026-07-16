@@ -183,11 +183,11 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 		switch configured.Name {
 		case "gau":
 			directory := path.Join("runs", runID, "executions", "tx_gau")
-			plan.Tools = append(plan.Tools, toolPlan(configured, []string{"gau", "--config", gauConfigIsolationPath, plan.Inputs.Target, "--subs", "--verbose", "--providers", "otx,urlscan", "--threads", "1", "--timeout", fmt.Sprint(configured.TimeoutSeconds), "--o", "native-output.txt"}, directory, "native-output.txt"))
+			plan.Tools = append(plan.Tools, toolPlan(configured, []string{"gau", "--config", gauConfigIsolationPath, plan.Inputs.Target, "--subs", "--verbose", "--providers", "otx,urlscan", "--threads", "1", "--timeout", fmt.Sprint(configured.RequestTimeoutSeconds), "--o", "native-output.txt"}, directory, "native-output.txt"))
 		case "katana":
 			for index, seed := range canonicalSeeds {
 				directory := path.Join("runs", runID, "executions", fmt.Sprintf("tx_katana_%02d", index+1))
-				argv := []string{"katana", "-u", seed, "-cs", katanaScopePatterns[index], "-d", "2", "-j", "-nc", "-silent", "-rl", fmt.Sprint(configured.RatePerSecond), "-c", fmt.Sprint(configured.Concurrency), "-p", fmt.Sprint(configured.Parallelism), "-timeout", fmt.Sprint(configured.TimeoutSeconds), "-or", "-ob", "-o", "native-output.jsonl"}
+				argv := []string{"katana", "-u", seed, "-cs", katanaScopePatterns[index], "-d", "2", "-j", "-nc", "-silent", "-rl", fmt.Sprint(configured.RatePerSecond), "-c", fmt.Sprint(configured.Concurrency), "-p", fmt.Sprint(configured.Parallelism), "-timeout", fmt.Sprint(configured.RequestTimeoutSeconds), "-or", "-ob", "-o", "native-output.jsonl"}
 				plan.Tools = append(plan.Tools, toolPlan(configured, argv, directory, "native-output.jsonl"))
 			}
 		case "arjun":
@@ -272,7 +272,10 @@ func katanaScopePattern(seed canonical.URL, config scope.Config, decision scope.
 func toolPlan(configured profiles.Tool, argv []string, directory, native string) model.ToolPlan {
 	return model.ToolPlan{
 		Name: configured.Name, ActivityClass: configured.ActivityClass, Argv: argv,
-		Limits:      model.ToolLimits{RatePerSecond: configured.RatePerSecond, Concurrency: configured.Concurrency, Parallelism: configured.Parallelism, TimeoutSeconds: configured.TimeoutSeconds},
+		Limits: model.ToolLimits{
+			RatePerSecond: configured.RatePerSecond, Concurrency: configured.Concurrency, Parallelism: configured.Parallelism,
+			RequestTimeoutSeconds: configured.RequestTimeoutSeconds, ExecutionTimeoutSeconds: configured.ExecutionTimeoutSeconds,
+		},
 		OutputPaths: []string{path.Join(directory, "stdout.raw"), path.Join(directory, "stderr.raw"), path.Join(directory, native)},
 	}
 }

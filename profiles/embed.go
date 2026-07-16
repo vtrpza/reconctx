@@ -25,12 +25,13 @@ type Limits struct {
 }
 
 type Tool struct {
-	Name           string `yaml:"name"`
-	ActivityClass  string `yaml:"activity_class"`
-	RatePerSecond  int    `yaml:"rate_limit_per_second"`
-	Concurrency    int    `yaml:"concurrency"`
-	Parallelism    int    `yaml:"parallelism"`
-	TimeoutSeconds int    `yaml:"timeout_seconds"`
+	Name                    string `yaml:"name"`
+	ActivityClass           string `yaml:"activity_class"`
+	RatePerSecond           int    `yaml:"rate_limit_per_second"`
+	Concurrency             int    `yaml:"concurrency"`
+	Parallelism             int    `yaml:"parallelism"`
+	RequestTimeoutSeconds   int    `yaml:"timeout_seconds"`
+	ExecutionTimeoutSeconds int    `yaml:"execution_timeout_seconds"`
 }
 
 func Load(name string) (Profile, error) {
@@ -52,7 +53,7 @@ func Load(name string) (Profile, error) {
 	}
 	seen := map[string]bool{}
 	for _, tool := range profile.Tools {
-		if seen[tool.Name] || tool.Name != "gau" && tool.Name != "katana" && tool.Name != "arjun" || tool.ActivityClass == "" || tool.RatePerSecond <= 0 || tool.Concurrency <= 0 || tool.Parallelism <= 0 || tool.TimeoutSeconds <= 0 {
+		if seen[tool.Name] || tool.Name != "gau" && tool.Name != "katana" && tool.Name != "arjun" || tool.ActivityClass == "" || tool.RatePerSecond <= 0 || tool.Concurrency <= 0 || tool.Parallelism <= 0 || tool.RequestTimeoutSeconds <= 0 || tool.ExecutionTimeoutSeconds <= tool.RequestTimeoutSeconds {
 			return Profile{}, errors.New("invalid embedded tool profile")
 		}
 		seen[tool.Name] = true

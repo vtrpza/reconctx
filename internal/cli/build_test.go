@@ -125,7 +125,7 @@ func TestValidateBuildWorkflowRequiresDecisionsForApprovedQueue(t *testing.T) {
 		PolicyVersion: "candidate-policy/v0",
 		PlanDigest:    planDigest,
 		Candidates:    []model.Candidate{},
-		Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 1},
+		Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 1, ExecutionTimeoutSeconds: 2},
 		MaxTargets:    0,
 	}
 	queueDigest, err := approval.QueueDigest(queue)
@@ -301,7 +301,7 @@ func buildTestPlan(workspacePath, runID string) model.Plan {
 		tools = append(tools, model.ToolPlan{
 			Name: name, ResolvedPath: resolved, Version: "fixture", ActivityClass: "fixture",
 			Binary: model.ToolBinary{SHA256: digest, Mode: 0o700, Device: 1, Inode: uint64(index + 1)},
-			Argv:   []string{resolved}, Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 1},
+			Argv:   []string{resolved}, Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 1, ExecutionTimeoutSeconds: 2},
 			OutputPaths: []string{path.Join(directory, "stdout.raw"), path.Join(directory, "stderr.raw"), path.Join(directory, "native-output.json")},
 		})
 	}

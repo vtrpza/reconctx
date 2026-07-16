@@ -452,7 +452,7 @@ func requestForTool(plan model.Plan, tool model.ToolPlan, nativeRequired bool) (
 
 func runnerLimits(tool model.ToolPlan) runner.Limits {
 	return runner.Limits{
-		Timeout: time.Duration(tool.Limits.TimeoutSeconds) * time.Second, GracePeriod: 2 * time.Second,
+		Timeout: time.Duration(tool.Limits.ExecutionTimeoutSeconds) * time.Second, GracePeriod: 2 * time.Second,
 		MaxStdoutBytes: 16 << 20, MaxStderrBytes: 16 << 20, MaxNativeBytes: 16 << 20,
 		MaxRecords: 100_000, MaxLineBytes: adapter.MaxLineBytes,
 	}
@@ -527,10 +527,10 @@ func displayCandidateQueue(output io.Writer, result candidate.Result, wordlistSH
 		return fmt.Errorf("encode candidate queue for approval: %w", err)
 	}
 	included := len(result.Queue.Candidates)
-	if _, err := fmt.Fprintf(output, "candidate_queue: version=%s policy=%s plan_digest=%s\nincluded: %d\nmax_targets: %d\nqueue_limits: rate=%d concurrency=%d parallelism=%d timeout=%ds\nwordlist_sha256: %s\nrequest_budget_each: %d\nqueue_digest: %s\ncanonical_queue_json_ascii: %s\n",
+	if _, err := fmt.Fprintf(output, "candidate_queue: version=%s policy=%s plan_digest=%s\nincluded: %d\nmax_targets: %d\nqueue_limits: rate=%d concurrency=%d parallelism=%d request_timeout=%ds execution_timeout=%ds\nwordlist_sha256: %s\nrequest_budget_each: %d\nqueue_digest: %s\ncanonical_queue_json_ascii: %s\n",
 		strconv.QuoteToASCII(result.Queue.QueueVersion), strconv.QuoteToASCII(result.Queue.PolicyVersion), strconv.QuoteToASCII(result.Queue.PlanDigest),
 		included, result.Queue.MaxTargets, result.Queue.Limits.RatePerSecond, result.Queue.Limits.Concurrency,
-		result.Queue.Limits.Parallelism, result.Queue.Limits.TimeoutSeconds, safeApprovalValue(wordlistSHA256),
+		result.Queue.Limits.Parallelism, result.Queue.Limits.RequestTimeoutSeconds, result.Queue.Limits.ExecutionTimeoutSeconds, safeApprovalValue(wordlistSHA256),
 		firstRequestBudget(result.Queue), result.QueueDigest, strconv.QuoteToASCII(string(queueJSON))); err != nil {
 		return err
 	}

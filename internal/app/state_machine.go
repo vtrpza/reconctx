@@ -231,7 +231,7 @@ func validateArjunContext(run model.Run, plan model.Plan, scopeDocument []byte, 
 			break
 		}
 	}
-	if arjunPath != "" && (queue.Limits.RatePerSecond > arjunLimits.RatePerSecond || queue.Limits.Concurrency > arjunLimits.Concurrency || queue.Limits.Parallelism > arjunLimits.Parallelism || queue.Limits.TimeoutSeconds > arjunLimits.TimeoutSeconds) {
+	if arjunPath != "" && (queue.Limits.RatePerSecond > arjunLimits.RatePerSecond || queue.Limits.Concurrency > arjunLimits.Concurrency || queue.Limits.Parallelism > arjunLimits.Parallelism || queue.Limits.RequestTimeoutSeconds > arjunLimits.RequestTimeoutSeconds || queue.Limits.ExecutionTimeoutSeconds > arjunLimits.ExecutionTimeoutSeconds) {
 		return "", errors.New("candidate queue exceeds approved Arjun limits")
 	}
 	for index, candidate := range queue.Candidates {
@@ -278,7 +278,7 @@ func validArjunCommand(candidate model.Candidate, arjunPath string, limits model
 	}
 	expected := []string{
 		arjunPath, "-u", candidate.URL, "-m", candidate.SourceMode, "-w", candidate.WordlistPath,
-		"--rate-limit", strconv.Itoa(limits.RatePerSecond), "-t", strconv.Itoa(limits.Concurrency), "-T", strconv.Itoa(limits.TimeoutSeconds),
+		"--rate-limit", strconv.Itoa(limits.RatePerSecond), "-t", strconv.Itoa(limits.Concurrency), "-T", strconv.Itoa(limits.RequestTimeoutSeconds),
 	}
 	if candidate.Location == "form" {
 		expected = append(expected, "--headers", "Content-Type: application/x-www-form-urlencoded")

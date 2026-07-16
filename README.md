@@ -31,6 +31,8 @@ install -m 0755 "reconctx_${version}_linux_amd64" "$HOME/.local/bin/reconctx"
 
 Add `$HOME/.local/bin` to `PATH` if it is not already there. This installs only `reconctx`; GAU, Katana, and Arjun are not bundled. Active runs require the exact supported scanner versions shown above.
 
+Starting with v0.1.1, plans bind separate HTTP request and total execution timeouts. Plans created by v0.1.0 are intentionally rejected because they lack the execution ceiling; regenerate them with `reconctx plan` and review the new digest before running or resuming.
+
 ## See the result before running anything
 
 ```bash
@@ -144,7 +146,7 @@ Raw occurrences are preserved even when canonical entities deduplicate them. Exi
 
 ## Security boundaries
 
-- Strict scope and fixed rate, concurrency, parallelism, timeout, and target ceilings constrain active scheduling.
+- Strict scope and fixed rate, concurrency, parallelism, scanner request timeout, total execution timeout, and target ceilings constrain active scheduling.
 - Collection and Arjun decisions bind behavior-bearing state to full SHA-256 digests.
 - Preflight binds supported tool versions, executable SHA-256, filesystem identity, paths, and effective environment; drift fails closed.
 - Subprocesses receive argument vectors without shell interpolation, a private approved `HOME`, bounded captures, and process-group containment.

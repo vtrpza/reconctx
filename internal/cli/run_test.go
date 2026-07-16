@@ -15,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/vtrpza/reconctx/internal/adapter"
 	"github.com/vtrpza/reconctx/internal/canonical"
@@ -43,6 +44,29 @@ func TestRunRequiresTTYBeforeAnyActiveExecution(t *testing.T) {
 	}
 }
 
+func TestV010PlanWithoutExecutionTimeoutFailsClosed(t *testing.T) {
+	_, planPath := plannedWorkflowFixture(t)
+	raw, err := os.ReadFile(planPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal(raw, &document); err != nil {
+		t.Fatal(err)
+	}
+	plan := document["plan"].(map[string]any)
+	tools := plan["tools"].([]any)
+	limits := tools[0].(map[string]any)["limits"].(map[string]any)
+	delete(limits, "execution_timeout_seconds")
+	oldArtifact, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := decodePlanArtifact(oldArtifact); err == nil {
+		t.Fatal("v0.1.0 plan without execution timeout was accepted")
+	}
+}
+
 func TestTerminalPrompterRejectsUnicodeFormatControls(t *testing.T) {
 	digest := "sha256:" + strings.Repeat("a", 64)
 	prompt := newTerminalPrompter(strings.NewReader("approve "+digest+"\noperator\u202elabel\n"), io.Discard)
@@ -54,7 +78,7 @@ func TestTerminalPrompterRejectsUnicodeFormatControls(t *testing.T) {
 func TestRequestForToolUsesApprovedEnvironmentSnapshot(t *testing.T) {
 	tool := model.ToolPlan{
 		Name: "gau", ResolvedPath: "/tools/gau", Argv: []string{"/tools/gau"},
-		Limits:      model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 10},
+		Limits:      model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 10, ExecutionTimeoutSeconds: 20},
 		OutputPaths: []string{"runs/run_test/executions/tx_gau/stdout.raw", "runs/run_test/executions/tx_gau/stderr.raw", "runs/run_test/executions/tx_gau/native-output.txt"},
 	}
 	plan := model.Plan{
@@ -71,6 +95,34 @@ func TestRequestForToolUsesApprovedEnvironmentSnapshot(t *testing.T) {
 	plan.Environment[0] = "LANG=drifted"
 	if request.Environment[0] != "LANG=C.UTF-8" {
 		t.Fatal("runner request aliases mutable plan environment")
+	}
+}
+
+func TestWorkflowSeparatesScannerRequestAndExecutionTimeouts(t *testing.T) {
+	executor := &fixtureExecutor{}
+	completedFixtureWorkflow(t, executor)
+
+	flags := map[string]string{"gau": "--timeout", "katana": "-timeout", "arjun": "-T"}
+	seen := map[string]bool{}
+	for _, request := range executor.requests {
+		flag, ok := flags[request.Tool.Name]
+		if !ok {
+			continue
+		}
+		seen[request.Tool.Name] = true
+		limits := request.Tool.Limits
+		if got, want := argumentAfter(request.Tool.Argv, flag), strconv.Itoa(limits.RequestTimeoutSeconds); got != want {
+			t.Errorf("%s %s = %q, want request timeout %q", request.Tool.Name, flag, got, want)
+		}
+		if got, want := request.Limits.Timeout, time.Duration(limits.ExecutionTimeoutSeconds)*time.Second; got != want {
+			t.Errorf("%s runner timeout = %s, want execution timeout %s", request.Tool.Name, got, want)
+		}
+		if limits.ExecutionTimeoutSeconds <= limits.RequestTimeoutSeconds {
+			t.Errorf("%s execution timeout %ds does not exceed request timeout %ds", request.Tool.Name, limits.ExecutionTimeoutSeconds, limits.RequestTimeoutSeconds)
+		}
+	}
+	if len(seen) != len(flags) {
+		t.Fatalf("executed scanners = %v, want gau, katana, and arjun", seen)
 	}
 }
 
@@ -108,7 +160,7 @@ func TestWorkflowBindsBothApprovalsAndCompilesFakeEvidence(t *testing.T) {
 	queued := workflow.Queue.Candidates[0]
 	for _, field := range []string{
 		"candidate_queue: version=\"reconctx-candidate-queue/v0\" policy=\"arjun-candidate-policy/v0\" plan_digest=\"" + artifact.PlanDigest + "\"",
-		fmt.Sprintf("queue_limits: rate=%d concurrency=%d parallelism=%d timeout=%ds", workflow.Queue.Limits.RatePerSecond, workflow.Queue.Limits.Concurrency, workflow.Queue.Limits.Parallelism, workflow.Queue.Limits.TimeoutSeconds),
+		fmt.Sprintf("queue_limits: rate=%d concurrency=%d parallelism=%d request_timeout=%ds execution_timeout=%ds", workflow.Queue.Limits.RatePerSecond, workflow.Queue.Limits.Concurrency, workflow.Queue.Limits.Parallelism, workflow.Queue.Limits.RequestTimeoutSeconds, workflow.Queue.Limits.ExecutionTimeoutSeconds),
 		"canonical_queue_json_ascii: " + strconv.QuoteToASCII(string(queueJSON)),
 		"wordlist: path=" + strconv.QuoteToASCII(queued.WordlistPath) + " sha256=" + queued.WordlistSHA256,
 		"native_output_path: " + strconv.QuoteToASCII(queued.NativeOutputPath),
@@ -411,6 +463,7 @@ type fixtureResponse struct {
 type fixtureExecutor struct {
 	calls     int
 	responses map[string]fixtureResponse
+	requests  []runner.Request
 }
 
 type interruptingExecutor struct {
@@ -426,6 +479,7 @@ func (executor interruptingExecutor) Run(ctx context.Context, request runner.Req
 
 func (executor *fixtureExecutor) Run(_ context.Context, request runner.Request) (runner.Result, error) {
 	executor.calls++
+	executor.requests = append(executor.requests, request)
 	if err := os.MkdirAll(request.OutputDir, 0o700); err != nil {
 		return runner.Result{}, err
 	}

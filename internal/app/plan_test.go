@@ -47,7 +47,7 @@ func TestPlanPreflightsAndRendersImmutableArtifact(t *testing.T) {
 			Name:          "gau",
 			ActivityClass: "passive_external",
 			Argv:          []string{"gau", "seed with space"},
-			Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 45},
+			Limits:        model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 45, ExecutionTimeoutSeconds: 900},
 			OutputPaths:   []string{"runs/run_test/executions/gau/stdout.raw"},
 		}},
 		Limits:               model.PlanLimits{ArjunMaxTargets: 25, ArjunRequestBudget: 100},
@@ -75,7 +75,8 @@ func TestPlanPreflightsAndRendersImmutableArtifact(t *testing.T) {
 	for _, field := range []string{
 		"scope: path=scope.yaml sha256=", "profile: web-blackbox", "wordlist: path=/wordlists/params.txt sha256=",
 		"policies: canonicalization=url-canonicalization/v0 schema=reconctx/v0", "global_limits: arjun_max_targets=25 arjun_request_budget=100",
-		"binary: sha256=sha256:", " mode=0700 uid=", " gid=", " device=", " inode=", "environment_allowlist: LANG,PATH", "environment: PATH=",
+		"binary: sha256=sha256:", " mode=0700 uid=", " gid=", " device=", " inode=", "request_timeout=45s execution_timeout=900s",
+		"environment_allowlist: LANG,PATH", "environment: PATH=",
 	} {
 		if !strings.Contains(rendered.Display, field) {
 			t.Errorf("approval display missing %q:\n%s", field, rendered.Display)

@@ -64,7 +64,7 @@ func validateQueue(queue model.CandidateQueue) error {
 	if queue.QueueVersion != "reconctx-candidate-queue/v0" || !validDigest(queue.PlanDigest) {
 		return errors.New("invalid candidate queue identity")
 	}
-	if queue.MaxTargets < 0 || len(queue.Candidates) > queue.MaxTargets || queue.Limits.RatePerSecond <= 0 || queue.Limits.Concurrency <= 0 || queue.Limits.Parallelism <= 0 || queue.Limits.TimeoutSeconds <= 0 {
+	if queue.MaxTargets < 0 || len(queue.Candidates) > queue.MaxTargets || queue.Limits.RatePerSecond <= 0 || queue.Limits.Concurrency <= 0 || queue.Limits.Parallelism <= 0 || queue.Limits.RequestTimeoutSeconds <= 0 || queue.Limits.ExecutionTimeoutSeconds <= queue.Limits.RequestTimeoutSeconds {
 		return errors.New("invalid candidate queue limits")
 	}
 	for index, candidate := range queue.Candidates {

@@ -27,6 +27,9 @@ func TestApprovalQueueDigestChangesWithBehavior(t *testing.T) {
 		"wordlist": func(q *model.CandidateQueue) { q.Candidates[0].WordlistSHA256 = "sha256:" + strings.Repeat("b", 64) },
 		"argv":     func(q *model.CandidateQueue) { q.Candidates[0].Argv = append(q.Candidates[0].Argv, "--stable") },
 		"limits":   func(q *model.CandidateQueue) { q.Limits.RatePerSecond++ },
+		"execution timeout": func(q *model.CandidateQueue) {
+			q.Limits.ExecutionTimeoutSeconds++
+		},
 	}
 	for name, mutate := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -80,9 +83,15 @@ func TestApprovalRecordsAreVerifiedAndAppendedWithSupersession(t *testing.T) {
 
 func TestApprovalQueueDigestRejectsInvalidBehavior(t *testing.T) {
 	tests := map[string]func(*model.CandidateQueue){
-		"version":  func(q *model.CandidateQueue) { q.QueueVersion = "other/v0" },
-		"plan":     func(q *model.CandidateQueue) { q.PlanDigest = "sha256:bad" },
-		"limit":    func(q *model.CandidateQueue) { q.Limits.TimeoutSeconds = 0 },
+		"version": func(q *model.CandidateQueue) { q.QueueVersion = "other/v0" },
+		"plan":    func(q *model.CandidateQueue) { q.PlanDigest = "sha256:bad" },
+		"limit":   func(q *model.CandidateQueue) { q.Limits.RequestTimeoutSeconds = 0 },
+		"missing execution limit": func(q *model.CandidateQueue) {
+			q.Limits.ExecutionTimeoutSeconds = 0
+		},
+		"execution limit": func(q *model.CandidateQueue) {
+			q.Limits.ExecutionTimeoutSeconds = q.Limits.RequestTimeoutSeconds
+		},
 		"too many": func(q *model.CandidateQueue) { q.MaxTargets = 0 },
 		"URL":      func(q *model.CandidateQueue) { q.Candidates[0].URL += "?query=1" },
 		"method":   func(q *model.CandidateQueue) { q.Candidates[0].Method = "DELETE" },
@@ -113,7 +122,7 @@ func testQueue() model.CandidateQueue {
 			RequestBudget:  100,
 			Scope:          model.CandidateScope{Classification: "in_scope", RuleID: "fixture", Reason: "origin allowlist root matched"},
 		}},
-		Limits:     model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 15},
+		Limits:     model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 15, ExecutionTimeoutSeconds: 7200},
 		MaxTargets: 25,
 	}
 }

@@ -1,6 +1,6 @@
 # CLI Contract
 
-This document defines the v0.1.0 Linux amd64 command surface. `reconctx` is interactive at active-execution boundaries and has no `--yes`, auto-approve, or agent approval path.
+This document defines the v0.1.1 Linux amd64 command surface. `reconctx` is interactive at active-execution boundaries and has no `--yes`, auto-approve, or agent approval path.
 
 ## `reconctx plan`
 
@@ -20,15 +20,17 @@ reconctx plan \
 
 `--target`, at least one `--seed`, `--scope`, `--wordlist`, and `--workspace` are required. `--target` is one canonical host name and must match the host of at least one seed. Every seed must be a valid URL allowed for active use by the scope document. The scope document is limited to 1 MiB. The wordlist must resolve to a bounded regular file. Planning reads at most 16 MiB from one validated file descriptor, copies the exact bytes to the private run workspace, and binds that copy's absolute path and SHA-256 into the plan; later changes to the source file cannot affect the approved run. Its non-empty line count becomes the per-candidate Arjun request budget. `--out` defaults to the run's `plan.json` inside the workspace and may not escape the workspace.
 
-`web-blackbox` is the only v0.1.0 profile. Its ceilings are:
+`web-blackbox` is the only v0.1.1 profile. Its ceilings are:
 
-| Tool | Activity | Rate/s | Concurrency | Parallelism | Timeout | Additional ceiling |
-|---|---|---:|---:|---:|---:|---|
-| GAU | passive external archive query | 1 | 1 | 1 | 45 s | pinned providers/arguments |
-| Katana | active approved | 2 | 1 | 1 | 10 s | depth and origin scope fixed by plan |
-| Arjun | active approved | 1 | 1 | 1 | 15 s | at most 25 candidate targets |
+| Tool | Activity | Rate/s | Concurrency | Parallelism | Scanner request timeout | Total execution timeout | Additional ceiling |
+|---|---|---:|---:|---:|---:|---:|---|
+| GAU | passive external archive query | 1 | 1 | 1 | 45 s | 900 s (15 min) | pinned providers/arguments |
+| Katana | active approved | 2 | 1 | 1 | 10 s | 7,200 s (2 h) per seed | depth and origin scope fixed by plan |
+| Arjun | active approved | 1 | 1 | 1 | 15 s | 7,200 s (2 h) per candidate | at most 25 candidate targets |
 
-The bounded runner adds fixed ceilings to those profile limits: stdout, stderr, and each native output are limited to 16 MiB; stdout and stderr are each limited to 100,000 newline-delimited records and 1 MiB per line. Adapters reject an admitted raw artifact above 16 MiB, invalid UTF-8, or a line above 1 MiB. Timeout or interruption sends `TERM`, allows a 2-second grace period, then escalates containment; any truncation forces partial coverage. A published handoff is limited to 1,024 filesystem entries, 16 MiB per file, and at most 64 `/` separators in any file path.
+`timeout_seconds` remains the scanner-native, request-oriented timeout passed as `gau --timeout`, `katana -timeout`, or `arjun -T`; exact per-tool behavior remains defined by the pinned tool contract. `execution_timeout_seconds` is the separately approved wall-clock deadline for the complete subprocess, including startup and all requests. Reaching the execution deadline sends `TERM`, allows a 2-second grace period, then escalates containment; it produces partial coverage rather than a request-timeout or absence claim.
+
+Both timeout values are displayed and digest-bound. A v0.1.0 plan lacks `execution_timeout_seconds`; v0.1.1 rejects it instead of guessing a default. Run `reconctx plan` again and approve the new digest. The bounded runner also limits stdout, stderr, and each native output to 16 MiB; stdout and stderr are each limited to 100,000 newline-delimited records and 1 MiB per line. Adapters reject an admitted raw artifact above 16 MiB, invalid UTF-8, or a line above 1 MiB. Any truncation forces partial coverage. A published handoff is limited to 1,024 filesystem entries, 16 MiB per file, and at most 64 `/` separators in any file path.
 
 Tool path flags override `PATH` lookup. Bare tool names are resolved only through the captured, approved `PATH`; relative paths containing `/` are rejected. Empty and duplicate `PATH` entries are removed, and non-absolute entries are rejected. Preflight accepts only the exact versions in `docs/compatibility-matrix-v0.md`, resolves an absolute executable, records its SHA-256 and filesystem identity, and rejects writable or unsafe binaries and parent paths. It reads bounded metadata and never starts a scanner or version-probe process.
 
@@ -63,7 +65,7 @@ After bounded GAU/Katana capture, normalization creates a deterministic Arjun qu
 - `skip`: record an explicit coverage gap and compile without Arjun;
 - `cancel`: persist cancellation and stop scheduling.
 
-v0.1.0 does not edit or reorder the generated queue. Changing a candidate, method, location, wordlist, request budget, limit, or command requires a new reviewed plan/run.
+v0.1.1 does not edit or reorder the generated queue. Changing a candidate, method, location, wordlist, request budget, limit, or command requires a new reviewed plan/run.
 
 An explicit `skip` completes the command after publishing a partial handoff, and the persisted run state is terminal `partial` rather than `success`.
 
@@ -100,7 +102,7 @@ Approval values use exactly:
 sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
-The decision line is exactly `<decision> <digest>`, followed by a private operator label. After surrounding whitespace is trimmed, current validation requires 1–128 bytes and rejects Unicode control and format characters. Collection decisions are `approve` or `cancel`; Arjun decisions are `approve`, `skip`, or `cancel`. The prefix and all 64 lowercase hexadecimal characters are required. Collection approval displays and covers the scope path/hash, wordlist path/hash, seeds, profile and policies, resolved tool paths, binary SHA-256/mode/UID/GID/device/inode, versions, argument vectors, per-tool and global limits, output paths, exact effective environment plus allowlist, and workspace root. Arjun approval displays and covers the ordered canonical queue, including the exact private Arjun, wordlist, and native-output paths; exact argv; method/location; wordlist hash; request budget; and limits. The portable candidate-decision projection redacts the executable, wordlist, and native-output paths.
+The decision line is exactly `<decision> <digest>`, followed by a private operator label. After surrounding whitespace is trimmed, current validation requires 1–128 bytes and rejects Unicode control and format characters. Collection decisions are `approve` or `cancel`; Arjun decisions are `approve`, `skip`, or `cancel`. The prefix and all 64 lowercase hexadecimal characters are required. Collection approval displays and covers the scope path/hash, wordlist path/hash, seeds, profile and policies, resolved tool paths, binary SHA-256/mode/UID/GID/device/inode, versions, argument vectors, per-tool request and execution timeouts and other limits, output paths, exact effective environment plus allowlist, and workspace root. Arjun approval displays and covers the ordered canonical queue, including the exact private Arjun, wordlist, and native-output paths; exact argv; method/location; wordlist hash; request budget; request timeout; execution timeout; and other limits. The portable candidate-decision projection redacts the executable, wordlist, and native-output paths.
 
 Approval records are append-only. A changed digest is never accepted by confirmation alone; the operator must enter the full current digest for a supported checkpoint or create a new reviewed plan/run.
 
@@ -122,7 +124,7 @@ Tool process exit codes and semantic coverage are preserved separately; a child 
 reconctx --version
 ```
 
-Prints the version embedded at build time. Release binaries must report `v0.1.0`; development builds may report a development suffix.
+Prints the version embedded at build time. v0.1.1 release binaries must report `v0.1.1`; development builds may report a development suffix.
 
 ## Workspace handling
 

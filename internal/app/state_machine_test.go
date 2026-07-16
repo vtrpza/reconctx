@@ -194,6 +194,11 @@ func TestTransitionRejectsOutOfScopePlanCeilingAndCommandDrift(t *testing.T) {
 		t.Fatal("queue exceeded approved Arjun intensity")
 	}
 	queue = stateTestQueue(t, plan, run.PlanDigest)
+	queue.Limits.ExecutionTimeoutSeconds = plan.Tools[1].Limits.ExecutionTimeoutSeconds + 1
+	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
+		t.Fatal("queue exceeded the Approval A execution timeout")
+	}
+	queue = stateTestQueue(t, plan, run.PlanDigest)
 	queue.Candidates[0].Argv[2] = "https://outside.test/"
 	if _, err := AwaitArjunApproval(run, plan, stateScopeDocument(), queue); err == nil {
 		t.Fatal("command target differed from candidate URL")
@@ -245,7 +250,7 @@ func TestTransitionPermitsApprovedZeroTargetSkip(t *testing.T) {
 }
 
 func TestArjunCommandBindsLimitsAndJSONMode(t *testing.T) {
-	limits := model.ToolLimits{RatePerSecond: 1, Concurrency: 2, Parallelism: 1, TimeoutSeconds: 9}
+	limits := model.ToolLimits{RatePerSecond: 1, Concurrency: 2, Parallelism: 1, RequestTimeoutSeconds: 9, ExecutionTimeoutSeconds: 10}
 	candidate := model.Candidate{
 		URL: "https://fixture.test/api", Method: "POST", SourceMode: "JSON", Location: "json", WordlistPath: "/wordlists/params.txt", NativeOutputPath: "/captures/native-output.json",
 		Argv: []string{"/tools/arjun", "-u", "https://fixture.test/api", "-m", "JSON", "-w", "/wordlists/params.txt", "--rate-limit", "1", "-t", "2", "-T", "9", "--headers", "Content-Type: application/json", "-oJ", "/captures/native-output.json"},
@@ -340,12 +345,12 @@ func stateTestPlan(t *testing.T) model.Plan {
 		Tools: []model.ToolPlan{{
 			Name: "gau", ResolvedPath: identities["gau"].ResolvedPath, Version: "2.2.4", ActivityClass: "passive_external",
 			Binary: binary(identities["gau"]),
-			Argv:   []string{identities["gau"].ResolvedPath, "fixture.test"}, Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 45},
+			Argv:   []string{identities["gau"].ResolvedPath, "fixture.test"}, Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 45, ExecutionTimeoutSeconds: 900},
 			OutputPaths: []string{"runs/run_test/gau/stdout.raw"},
 		}, {
 			Name: "arjun", ResolvedPath: identities["arjun"].ResolvedPath, Version: "2.2.7", ActivityClass: "active_approved",
 			Binary: binary(identities["arjun"]),
-			Argv:   []string{identities["arjun"].ResolvedPath, "--version"}, Limits: model.ToolLimits{RatePerSecond: 2, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 15},
+			Argv:   []string{identities["arjun"].ResolvedPath, "--version"}, Limits: model.ToolLimits{RatePerSecond: 2, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 15, ExecutionTimeoutSeconds: 7200},
 			OutputPaths: []string{"runs/run_test/arjun/stdout.raw"},
 		}},
 		Limits: model.PlanLimits{ArjunMaxTargets: 25, ArjunRequestBudget: 100}, EnvironmentAllowlist: []string{"LANG"}, WorkspaceRoot: "/work",
@@ -367,7 +372,7 @@ func stateTestQueue(t *testing.T, plan model.Plan, planDigest string) model.Cand
 			Argv:             []string{arjunPath, "-u", "https://fixture.test/search", "-m", "GET", "-w", plan.Inputs.WordlistPath, "--rate-limit", "2", "-t", "1", "-T", "15", "-oJ", nativeOutputPath}, RequestBudget: 100,
 			Scope: model.CandidateScope{Classification: "in_scope", RuleID: "fixture", Reason: "origin allowlist root matched"},
 		}},
-		Limits: model.ToolLimits{RatePerSecond: 2, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 15}, MaxTargets: 25,
+		Limits: model.ToolLimits{RatePerSecond: 2, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 15, ExecutionTimeoutSeconds: 7200}, MaxTargets: 25,
 	}
 }
 

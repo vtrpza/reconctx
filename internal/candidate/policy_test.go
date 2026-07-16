@@ -200,7 +200,7 @@ func testConfig() Config {
 	return Config{
 		PlanDigest: "sha256:" + strings.Repeat("a", 64), ArjunPath: "/tools/arjun",
 		WordlistPath: "/wordlists/params.txt", WordlistSHA256: "sha256:" + strings.Repeat("b", 64),
-		NativeOutputRoot: "/private/runs/run_test/arjun", Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 15},
+		NativeOutputRoot: "/private/runs/run_test/arjun", Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 15, ExecutionTimeoutSeconds: 7200},
 		MaxTargets: 1, RequestBudget: 100, ExcludedPathPrefixes: []string{"/admin"},
 	}
 }

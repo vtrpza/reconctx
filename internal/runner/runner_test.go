@@ -202,6 +202,19 @@ func TestRunnerRejectsUnsafeOrUncapturedOutputs(t *testing.T) {
 	}
 }
 
+func TestRunnerBindsTotalDeadlineToApprovedExecutionTimeout(t *testing.T) {
+	tool := runnerTestTool(t, "exit 0\n")
+	request := testRequest(filepath.Join(privateParent(t), "tx_execution_timeout"), tool)
+	request.Limits.Timeout = time.Duration(tool.Limits.ExecutionTimeoutSeconds) * time.Second
+	if err := validateRequest(request); err != nil {
+		t.Fatalf("runner rejected exact approved execution timeout: %v", err)
+	}
+	request.Limits.Timeout++
+	if err := validateRequest(request); err == nil {
+		t.Fatal("runner accepted deadline above approved execution timeout")
+	}
+}
+
 func TestRunnerTimeoutKillsProcessGroupAndMarksPartial(t *testing.T) {
 	pidFile := filepath.Join(t.TempDir(), "child.pid")
 	tool := runnerTestTool(t, "trap '' TERM\nsh -c 'pidfile=$1; read stat < /proc/self/stat; set -- $stat; printf %s \"$1\" > \"$pidfile\"; trap \"\" TERM; while :; do sleep 1; done' sh \"$1\" &\nwhile [ ! -s \"$1\" ]; do sleep 0.01; done\nwhile :; do sleep 1; done\n", pidFile)
@@ -646,7 +659,7 @@ func runnerTestTool(t *testing.T, script string, arguments ...string) model.Tool
 		Name: "fake", ResolvedPath: identity.ResolvedPath, Version: "1.0.0", ActivityClass: "fixture",
 		Binary: model.ToolBinary{SHA256: identity.SHA256, Mode: uint32(identity.Mode), UID: identity.UID, GID: identity.GID, Device: identity.Device, Inode: identity.Inode},
 		Argv:   append([]string{identity.ResolvedPath}, arguments...),
-		Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, TimeoutSeconds: 2},
+		Limits: model.ToolLimits{RatePerSecond: 1, Concurrency: 1, Parallelism: 1, RequestTimeoutSeconds: 2, ExecutionTimeoutSeconds: 3},
 	}
 }
 

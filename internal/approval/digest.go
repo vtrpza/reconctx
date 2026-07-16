@@ -99,7 +99,7 @@ func validatePlan(plan model.Plan) error {
 		if !filepath.IsAbs(tool.ResolvedPath) || filepath.Clean(tool.ResolvedPath) != tool.ResolvedPath || strings.ContainsRune(tool.ResolvedPath, '\x00') {
 			return fmt.Errorf("tool %d path must be absolute and clean", index+1)
 		}
-		if tool.Limits.RatePerSecond <= 0 || tool.Limits.Concurrency <= 0 || tool.Limits.Parallelism <= 0 || tool.Limits.TimeoutSeconds <= 0 {
+		if tool.Limits.RatePerSecond <= 0 || tool.Limits.Concurrency <= 0 || tool.Limits.Parallelism <= 0 || tool.Limits.RequestTimeoutSeconds <= 0 || tool.Limits.ExecutionTimeoutSeconds <= tool.Limits.RequestTimeoutSeconds {
 			return fmt.Errorf("tool %d limits are invalid", index+1)
 		}
 		if len(tool.Argv) == 0 || tool.Argv[0] != tool.ResolvedPath {

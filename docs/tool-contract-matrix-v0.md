@@ -11,6 +11,21 @@
 | Katana | v1.6.1 | JSONL | normal scoped crawl + interrupted partial crawl captured | implemented and fixture-tested |
 | Arjun | 2.2.7 | JSON + stdout for zero/failure | GET/POST/JSON/zero + interruption + request-timeout failure captured | implemented and fixture-tested |
 
+## Timeout supervision in v0.1.1
+
+Tool-native and runner timeouts are separate contracts:
+
+- `timeout_seconds` is the scanner-native, request-oriented timeout. It is passed as GAU `--timeout`, Katana `-timeout`, or Arjun `-T`; the sections below define the pinned tools' exact observed behavior.
+- `execution_timeout_seconds` is the approved wall-clock deadline for the whole subprocess, including startup and all requests. It is enforced by the runner, not added to scanner argv.
+
+| Tool execution | Scanner request timeout | Total execution timeout |
+|---|---:|---:|
+| GAU | 45s | 900s (15 min) |
+| Katana, per seed | 10s | 7,200s (2 h) |
+| Arjun, per candidate | 15s | 7,200s (2 h) |
+
+Both values are shown before approval and included in the applicable plan or queue digest. Reaching the execution deadline is partial execution coverage; it is not a scanner request-timeout or parameter/endpoint-absence result. v0.1.0 plans lack the separate execution field, so v0.1.1 rejects them and requires a newly generated plan.
+
 ## GAU 2.2.4
 
 ### Semantic role
@@ -166,7 +181,7 @@ Fixture: `fixtures/cases/katana/v1.6.1/KAT-INTERRUPTED-LOOPBACK/`.
 3. derive endpoint identity from request method + canonical URL, never timestamp/headers;
 4. preserve response status as a run-scoped observation;
 5. recognize stdout/native byte equivalence and avoid duplicating evidence;
-6. record the scope regex and execution budgets as provenance;
+6. record the scope regex, scanner request timeout, and total execution timeout as provenance;
 7. do not infer that an out-of-scope URL was absent from target content merely because it was absent from output;
 8. on interruption, parse each complete JSONL line, mark coverage partial and never convert an exit `124` into a zero-result claim.
 
@@ -175,7 +190,7 @@ Fixture: `fixtures/cases/katana/v1.6.1/KAT-INTERRUPTED-LOOPBACK/`.
 - empty page;
 - redirect chain;
 - malformed line amid valid lines;
-- timeout and rate-limit behavior.
+- request-timeout and rate-limit behavior.
 
 ## Arjun 2.2.7
 
@@ -213,12 +228,12 @@ Absence of the native file is expected for this state and must not automatically
 
 Two absence-of-native-output cases have different semantics:
 
-| Case | Exit | Outer timeout | Native JSON | Required classification |
+| Case | Exit | Capture safety timeout reached | Native JSON | Required classification |
 |---|---:|---:|---|---|
 | interrupted during chunk processing | `124` | yes | absent | `partial` / `interrupted`; parameter result unknown |
 | deterministic request-timeout path | `1` | no | absent | `tool_error` / `failed`; no parameter result |
 
-In the request-timeout case, Arjun 2.2.7 raised `AttributeError: 'str' object has no attribute 'status_code'` during stability initialization. The process failed before the 30-second outer safety timeout. This is not a zero-result case and supports no parameter-absence claim.
+In the request-timeout case, Arjun 2.2.7 raised `AttributeError: 'str' object has no attribute 'status_code'` during stability initialization. The process failed before the fixture capture's 30-second outer safety timeout. This is not a zero-result case and supports no parameter-absence claim.
 
 The installed Arjun CLI does not expose a functional `--version`; that invocation prints help containing `127.0.0.1:8080`. Preflight therefore does not execute `--version`. It reads bounded `Name: arjun` and `Version: 2.2.7` distribution metadata from the same environment prefix as an absolute, path-validated entrypoint/interpreter. An unbound `env python` shebang, ambiguous distribution metadata, a bare numeric token, and an IP-like token are rejected. A standalone anchored `v2.2.7` remains a valid parser input for imported runtime evidence, not a preflight probe.
 
@@ -243,7 +258,7 @@ Fixtures: `fixtures/cases/arjun/2.2.7/`.
 4. classify absent `-oJ` + exit `0` + explicit zero message as `success_zero`;
 5. classify detected names as observations, not endpoint ground truth;
 6. preserve ground-truth differentials in test fixtures to prevent adapters from inventing missing detections;
-7. store target URL, mode, wordlist checksum, rate, threads and timeout from execution provenance because native JSON omits them;
+7. store target URL, mode, wordlist checksum, rate, threads, scanner request timeout, and total execution timeout from execution provenance because native JSON omits them;
 8. classify absent native JSON by the full execution tuple—exit, timeout/interruption state and stdout/stderr—not by file absence alone;
 9. map exit `124` with interrupted progress to partial/interrupted, preserving unknown parameter result;
 10. map exit `1` plus the observed timeout-path traceback to failed/tool-error and prohibit absence claims;

@@ -100,10 +100,10 @@ func renderPlan(plan model.Plan, digest string) string {
 		safeDisplay(plan.Inputs.WordlistPath), safeDisplay(plan.Inputs.WordlistSHA256), safeDisplay(plan.CanonicalizationPolicy), safeDisplay(plan.SchemaVersion),
 		plan.Limits.ArjunMaxTargets, plan.Limits.ArjunRequestBudget)
 	for _, tool := range plan.Tools {
-		fmt.Fprintf(&output, "tool: %s %s %s\npath: %s\nbinary: sha256=%s mode=%#o uid=%d gid=%d device=%d inode=%d\nargv: %s\nlimits: rate=%d concurrency=%d parallelism=%d timeout=%ds\noutputs: %s\n",
+		fmt.Fprintf(&output, "tool: %s %s %s\npath: %s\nbinary: sha256=%s mode=%#o uid=%d gid=%d device=%d inode=%d\nargv: %s\nlimits: rate=%d concurrency=%d parallelism=%d request_timeout=%ds execution_timeout=%ds\noutputs: %s\n",
 			safeDisplay(tool.Name), safeDisplay(tool.Version), safeDisplay(tool.ActivityClass), safeDisplay(tool.ResolvedPath),
 			safeDisplay(tool.Binary.SHA256), tool.Binary.Mode, tool.Binary.UID, tool.Binary.GID, tool.Binary.Device, tool.Binary.Inode, displayArgv(tool.Argv),
-			tool.Limits.RatePerSecond, tool.Limits.Concurrency, tool.Limits.Parallelism, tool.Limits.TimeoutSeconds,
+			tool.Limits.RatePerSecond, tool.Limits.Concurrency, tool.Limits.Parallelism, tool.Limits.RequestTimeoutSeconds, tool.Limits.ExecutionTimeoutSeconds,
 			safeDisplay(strings.Join(tool.OutputPaths, ",")))
 	}
 	fmt.Fprintf(&output, "workspace: %s\nenvironment_allowlist: %s\n", safeDisplay(plan.WorkspaceRoot), safeDisplay(strings.Join(plan.EnvironmentAllowlist, ",")))
