@@ -21,6 +21,7 @@ base="https://github.com/vtrpza/reconctx/releases/download/v${version}"
 curl -fLO "$base/reconctx_${version}_linux_amd64"
 curl -fLO "$base/reconctx_${version}_checksums.txt"
 
+echo "9e5d5094b13cfa6259254df347848a47577666e7330b83f603ad15007f63d601  reconctx_${version}_checksums.txt" | sha256sum -c -
 sha256sum --ignore-missing -c "reconctx_${version}_checksums.txt"
 
 mkdir -p "$HOME/.local/bin"
