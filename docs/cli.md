@@ -18,7 +18,7 @@ reconctx plan \
   [--gau-path PATH] [--katana-path PATH] [--arjun-path PATH]
 ```
 
-`--target`, at least one `--seed`, `--scope`, `--wordlist`, and `--workspace` are required. `--target` is one canonical host name and must match the host of at least one seed. Every seed must be a valid URL allowed for active use by the scope document. The wordlist must resolve to a bounded regular file. Planning reads at most 16 MiB from one validated file descriptor, copies the exact bytes to the private run workspace, and binds that copy's absolute path and SHA-256 into the plan; later changes to the source file cannot affect the approved run. Its non-empty line count becomes the per-candidate Arjun request budget. `--out` defaults to the run's `plan.json` inside the workspace and may not escape the workspace.
+`--target`, at least one `--seed`, `--scope`, `--wordlist`, and `--workspace` are required. `--target` is one canonical host name and must match the host of at least one seed. Every seed must be a valid URL allowed for active use by the scope document. The scope document is limited to 1 MiB. The wordlist must resolve to a bounded regular file. Planning reads at most 16 MiB from one validated file descriptor, copies the exact bytes to the private run workspace, and binds that copy's absolute path and SHA-256 into the plan; later changes to the source file cannot affect the approved run. Its non-empty line count becomes the per-candidate Arjun request budget. `--out` defaults to the run's `plan.json` inside the workspace and may not escape the workspace.
 
 `web-blackbox` is the only v0.1.0 profile. Its ceilings are:
 
@@ -27,6 +27,8 @@ reconctx plan \
 | GAU | passive external archive query | 1 | 1 | 1 | 45 s | pinned providers/arguments |
 | Katana | active approved | 2 | 1 | 1 | 10 s | depth and origin scope fixed by plan |
 | Arjun | active approved | 1 | 1 | 1 | 15 s | at most 25 candidate targets |
+
+The bounded runner adds fixed ceilings to those profile limits: stdout, stderr, and each native output are limited to 16 MiB; stdout and stderr are each limited to 100,000 newline-delimited records and 1 MiB per line. Adapters reject an admitted raw artifact above 16 MiB, invalid UTF-8, or a line above 1 MiB. Timeout or interruption sends `TERM`, allows a 2-second grace period, then escalates containment; any truncation forces partial coverage. A published handoff is limited to 1,024 filesystem entries, 16 MiB per file, and at most 64 `/` separators in any file path.
 
 Tool path flags override `PATH` lookup. Bare tool names are resolved only through the captured, approved `PATH`; relative paths containing `/` are rejected. Empty and duplicate `PATH` entries are removed, and non-absolute entries are rejected. Preflight accepts only the exact versions in `docs/compatibility-matrix-v0.md`, resolves an absolute executable, records its SHA-256 and filesystem identity, and rejects writable or unsafe binaries and parent paths. It reads bounded metadata and never starts a scanner or version-probe process.
 

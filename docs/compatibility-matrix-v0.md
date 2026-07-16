@@ -1,6 +1,6 @@
 # Compatibility Matrix v0
 
-**Status:** v0.1.0 release-candidate contract. Compatibility means fixture-backed support for the exact versions below, not a promise for adjacent versions or every tool option.
+**Status:** v0.1.0 release contract. Compatibility means fixture-backed support for the exact versions below, not a promise for adjacent versions or every tool option.
 
 ## Platform
 

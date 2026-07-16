@@ -4,10 +4,10 @@
 
 | Version | Platform | Security support |
 |---|---|---|
-| v0.1.x | Linux amd64 | Supported after publication |
+| v0.1.x | Linux amd64 | Supported |
 | Earlier development snapshots | Any | Unsupported |
 
-v0.1.0 is currently a local release candidate. Until it is published, reports should identify the affected commit rather than assume a supported binary.
+Reports should identify the affected version, commit, and binary digest when available.
 
 ## Reporting a vulnerability
 

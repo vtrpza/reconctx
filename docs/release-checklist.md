@@ -114,6 +114,7 @@ dist/reconctx_0.1.0_checksums.txt
 dist/reconctx_0.1.0_linux_amd64.spdx.json
 dist/THIRD_PARTY_LICENSES.txt
 dist/release-test-results.txt
+dist/LICENSE
 ```
 
 Generate an SPDX JSON SBOM with a pinned Syft release and record the tool/version in the test log. If automation is later added, the reviewed baseline pins are `anchore/sbom-action` v0.24.0 at `e22c389904149dbc22b58101806040fa8d37a610` and `actions/attest` v4.1.1 at `a1948c3f048ba23858d222213b7c278aabede763`; neither is needed in ordinary CI.
@@ -125,7 +126,8 @@ After the SBOM, license inventory, and test log are final, checksum every publis
   reconctx_0.1.0_linux_amd64 \
   reconctx_0.1.0_linux_amd64.spdx.json \
   THIRD_PARTY_LICENSES.txt \
-  release-test-results.txt > reconctx_0.1.0_checksums.txt)
+  release-test-results.txt \
+  LICENSE > reconctx_0.1.0_checksums.txt)
 (cd dist && sha256sum -c reconctx_0.1.0_checksums.txt)
 ```
 
@@ -135,11 +137,11 @@ After the SBOM, license inventory, and test log are final, checksum every publis
 
 ## 6. G5 publication stop
 
-- [ ] Replace the v0.1.0 changelog date only after the final artifact set is fixed.
+- [ ] Fix the v0.1.0 changelog date before building the exact final artifact set; rebuild if it changes.
 - [ ] Record the candidate commit and hashes in the approval request.
 - [ ] Obtain explicit approval for this exact source tree and artifact set.
 - [ ] Create an immutable `v0.1.0` tag only after approval.
-- [ ] Publish the binary, checksum, SPDX SBOM, license inventory, and test results together.
+- [ ] Publish the binary, checksum, SPDX SBOM, license inventory, project license, and test results together.
 - [ ] Create provenance/attestation only for the exact published digest and verify it after publication.
 - [ ] Re-download and verify the public artifacts from a clean environment.
 

@@ -6,9 +6,9 @@
 
 The operator owns every network decision. A downstream agent receives files—not scanner control.
 
-**Release candidate:** v0.1.0 for Linux amd64 · GAU 2.2.4 · Katana v1.6.1 · Arjun 2.2.7 · Apache-2.0
+**Release:** v0.1.0 for Linux amd64 · GAU 2.2.4 · Katana v1.6.1 · Arjun 2.2.7 · Apache-2.0
 
-G4 operator acceptance passed. No public tag or release exists yet; the final artifact set and independent review remain pending.
+G4 operator acceptance passed. Release artifacts are accepted only when their checksums match an explicit G5 approval.
 
 [Inspect a complete sanitized handoff](examples/handoff-web-blackbox-v0/CONTEXT.md) · [CLI contract](docs/cli.md) · [Threat model](docs/threat-model.md)
 

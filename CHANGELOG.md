@@ -4,11 +4,11 @@ All notable changes are documented here. The project follows [Semantic Versionin
 
 ## [Unreleased]
 
-No changes recorded after the v0.1.0 release candidate.
+No changes recorded after v0.1.0.
 
-## [0.1.0] - Unreleased
+## [0.1.0] - 2026-07-16
 
-First Linux amd64 release candidate. Replace `Unreleased` with the publication date only after G5 approval.
+First Linux amd64 release.
 
 ### Added
 
@@ -32,4 +32,3 @@ First Linux amd64 release candidate. Replace `Unreleased` with the publication d
 - The generated Arjun queue is approved as-is, skipped, or cancelled; v0.1.0 has no interactive candidate edit or reorder operation.
 - `resume` continues only approval and compile checkpoints; unsafe in-flight and terminal states require a new reviewed plan.
 - Authenticated HAR/Burp input, BBOT import, dashboards, daemons, distributed execution, and findings/severity generation are deferred.
-- Publication remains blocked until the clean-candidate release checklist, operator loopback acceptance, release artifacts, SBOM review, and G5 approval pass.

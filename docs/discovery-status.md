@@ -1,12 +1,12 @@
-# Discovery and Release Status
+# Discovery and Pre-Release Status
 
 **Observed:** 2026-07-16
 
 **Target:** v0.1.0, Linux amd64
 
-**Publication:** not performed; G5 remains closed
+**Snapshot:** G4 passed; G5 artifacts and approval were pending at observation time
 
-The discovery contracts have moved into a production Go implementation. The remaining work is verification and release gating, not architecture discovery.
+This is the dated final pre-G5 snapshot. The discovery contracts had moved into a production Go implementation; the remaining work at observation time was verification and release gating, not architecture discovery.
 
 ## Gate status
 
