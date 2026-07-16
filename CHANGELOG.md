@@ -4,6 +4,10 @@ All notable changes are documented here. The project follows [Semantic Versionin
 
 ## [Unreleased]
 
+No changes recorded after v0.1.1.
+
+## [0.1.1] - 2026-07-16
+
 ### Fixed
 
 - Separate each scanner's native request-oriented timeout from the runner's total wall-clock execution deadline. v0.1.0 used the scanner timeout as the whole-process deadline, which could stop normal Katana crawls at 10 seconds and Arjun candidates at 15 seconds.

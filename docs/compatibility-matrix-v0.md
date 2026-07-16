@@ -1,6 +1,6 @@
 # Compatibility Matrix v0
 
-**Status:** v0.1.1 candidate contract; publication requires fresh acceptance. Compatibility means fixture-backed support for the exact versions below, not a promise for adjacent versions or every tool option.
+**Status:** v0.1.1 release contract. The operator waived repeat G4/G5 for this timeout-only patch on 2026-07-16. Compatibility means fixture-backed support for the exact versions below, not a promise for adjacent versions or every tool option.
 
 ## Platform
 

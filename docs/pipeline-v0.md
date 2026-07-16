@@ -184,7 +184,7 @@ Planning copies the bounded source wordlist byte-for-byte into that private run 
 
 `plan_digest` is SHA-256 over canonical JSON of all behavior-bearing fields. Cosmetic labels and terminal formatting do not enter the digest.
 
-In v0.1.1, `timeout_seconds` is the HTTP request timeout passed to the scanner and `execution_timeout_seconds` is the runner's wall-clock deadline for the complete subprocess. Both are required and digest-bound. A v0.1.0 plan has no execution deadline field, fails validation closed under v0.1.1, and must be regenerated and approved; no compatibility default is inferred.
+In v0.1.1, `timeout_seconds` is the scanner-native, request-oriented timeout and `execution_timeout_seconds` is the runner's wall-clock deadline for the complete subprocess. Both are required and digest-bound. A v0.1.0 plan has no execution deadline field, fails validation closed under v0.1.1, and must be regenerated and approved; no compatibility default is inferred.
 
 ## 6. Approval A — initial collection
 
@@ -492,4 +492,4 @@ Pipeline/approval gate is closed when:
 - no agent control plane exists;
 - active discovery execution remains operator-controlled.
 
-G1–G3 implementation is present and the [v0.1.0 G4 operator loopback acceptance](g4-acceptance-v0.1.0.md) remains historical evidence. The v0.1.1 timeout correction requires fresh release verification and artifact-specific approval; this document does not authorize publication.
+G1–G3 implementation is present and the [v0.1.0 G4 operator loopback acceptance](g4-acceptance-v0.1.0.md) remains historical evidence. On 2026-07-16, the operator explicitly waived repeat G4/G5 and authorized publication of the v0.1.1 timeout correction.

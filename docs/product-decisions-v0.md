@@ -3,7 +3,7 @@
 **Approved by:** operator  
 **Approved at:** `2026-07-12T22:53:28-03:00`  
 **Implementation approved at:** `2026-07-13T12:50:05-03:00`  
-**Artifact publication approval:** not granted; G5 remains outstanding
+**Artifact publication approval:** v0.1.1 publication granted on 2026-07-16; repeat G4/G5 explicitly waived
 **Status:** binding implementation inputs; changes require an explicit operator decision
 
 ## Product posture
@@ -40,7 +40,7 @@ Any plan drift requires renewed approval, including a new target/tool, scope exp
 
 - The private workspace preserves bounded raw captures; any capture-limit truncation is explicit and forces partial coverage.
 - The handoff embeds only admitted, evidence-referenced artifacts after secret and private-path checks, or omits raw bytes.
-- v0.1.0 has no unredacted/full-raw inclusion option.
+- v0.1.1 has no unredacted/full-raw inclusion option.
 - The manifest declares `embedded_sanitized`, `referenced`, or `omitted` raw policy.
 
 ## Active execution boundary

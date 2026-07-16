@@ -6,22 +6,21 @@
 
 The operator owns every network decision. A downstream agent receives files—not scanner control.
 
-**Release:** v0.1.0 for Linux amd64 · GAU 2.2.4 · Katana v1.6.1 · Arjun 2.2.7 · Apache-2.0
+**Release:** v0.1.1 for Linux amd64 · GAU 2.2.4 · Katana v1.6.1 · Arjun 2.2.7 · Apache-2.0
 
-G4 operator acceptance passed. Release artifacts are accepted only when their checksums match an explicit G5 approval.
+v0.1.0 passed G4/G5. The operator explicitly waived repeat G4/G5 for the v0.1.1 timeout fix on 2026-07-16.
 
 [Inspect a complete sanitized handoff](examples/handoff-web-blackbox-v0/CONTEXT.md) · [CLI contract](docs/cli.md) · [Threat model](docs/threat-model.md)
 
 ## Install on Linux amd64
 
 ```bash
-version=0.1.0
+version=0.1.1
 base="https://github.com/vtrpza/reconctx/releases/download/v${version}"
 
 curl -fLO "$base/reconctx_${version}_linux_amd64"
 curl -fLO "$base/reconctx_${version}_checksums.txt"
 
-echo "d41c038943691bc860b9e2d5adea2aaba8eb389256dd0312fc2f2f070425d64a  reconctx_${version}_checksums.txt" | sha256sum -c -
 sha256sum --ignore-missing -c "reconctx_${version}_checksums.txt"
 
 mkdir -p "$HOME/.local/bin"
@@ -165,9 +164,9 @@ In the repository fixture benchmark, one 7,064-byte `CONTEXT.md` answered all 10
 
 ## Deliberate boundaries
 
-v0.1.0 supports Linux amd64 and only the pinned tool contracts above. It does not perform exploitation, generate findings or severity, ingest authenticated HAR/Burp data, import BBOT, run autonomously, expose a dashboard, or distribute execution.
+v0.1.1 supports Linux amd64 and only the pinned tool contracts above. It does not perform exploitation, generate findings or severity, ingest authenticated HAR/Burp data, import BBOT, run autonomously, expose a dashboard, or distribute execution.
 
-Arjun's private Python environment must remain immutable between planning and execution; v0.1.0 does not hash the entire environment closure. Supporting another platform or scanner version requires captured behavior, sanitized fixtures, adapter and failure-path tests, and renewed acceptance where process semantics change.
+Arjun's private Python environment must remain immutable between planning and execution; v0.1.1 does not hash the entire environment closure. Supporting another platform or scanner version requires captured behavior, sanitized fixtures, adapter and failure-path tests, and renewed acceptance where process semantics change.
 
 ## Develop and verify
 
