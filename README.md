@@ -12,6 +12,25 @@ G4 operator acceptance passed. Release artifacts are accepted only when their ch
 
 [Inspect a complete sanitized handoff](examples/handoff-web-blackbox-v0/CONTEXT.md) · [CLI contract](docs/cli.md) · [Threat model](docs/threat-model.md)
 
+## Install on Linux amd64
+
+```bash
+version=0.1.0
+base="https://github.com/vtrpza/reconctx/releases/download/v${version}"
+
+curl -fLO "$base/reconctx_${version}_linux_amd64"
+curl -fLO "$base/reconctx_${version}_checksums.txt"
+
+echo "d41c038943691bc860b9e2d5adea2aaba8eb389256dd0312fc2f2f070425d64a  reconctx_${version}_checksums.txt" | sha256sum -c -
+sha256sum --ignore-missing -c "reconctx_${version}_checksums.txt"
+
+mkdir -p "$HOME/.local/bin"
+install -m 0755 "reconctx_${version}_linux_amd64" "$HOME/.local/bin/reconctx"
+"$HOME/.local/bin/reconctx" --version
+```
+
+Add `$HOME/.local/bin` to `PATH` if it is not already there. This installs only `reconctx`; GAU, Katana, and Arjun are not bundled. Active runs require the exact supported scanner versions shown above.
+
 ## See the result before running anything
 
 ```bash
