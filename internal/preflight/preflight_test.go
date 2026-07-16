@@ -148,6 +148,9 @@ func TestPreflightReadsBoundArjunMetadataWithoutStartingEntrypoint(t *testing.T)
 	if err := os.MkdirAll(metadata, 0o700); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.Symlink("lib", filepath.Join(prefix, "lib64")); err != nil {
+		t.Fatal(err)
+	}
 	sentinel := filepath.Join(prefix, "started")
 	interpreter := filepath.Join(bin, "python3")
 	if err := os.WriteFile(interpreter, []byte(fmt.Sprintf("#!/bin/sh\nprintf started > %q\n", sentinel)), 0o700); err != nil {

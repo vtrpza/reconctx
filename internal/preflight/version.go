@@ -213,6 +213,7 @@ func arjunPackageVersion(executable string) (string, bool, error) {
 
 func findDistributionMetadata(prefix, packageName string) (string, error) {
 	var matches []string
+	seen := make(map[string]bool)
 	for _, library := range []string{"lib", "lib64"} {
 		versions, err := readDirBounded(filepath.Join(prefix, library))
 		if err != nil {
@@ -231,7 +232,15 @@ func findDistributionMetadata(prefix, packageName string) (string, error) {
 				for _, entry := range entries {
 					name := strings.ToLower(entry.Name())
 					if entry.IsDir() && strings.HasPrefix(name, packageName+"-") && strings.HasSuffix(name, ".dist-info") {
-						matches = append(matches, filepath.Join(directory, entry.Name(), "METADATA"))
+						metadata := filepath.Join(directory, entry.Name(), "METADATA")
+						resolved, err := filepath.EvalSymlinks(metadata)
+						if err != nil {
+							return "", err
+						}
+						if !seen[resolved] {
+							seen[resolved] = true
+							matches = append(matches, metadata)
+						}
 					}
 				}
 			}
