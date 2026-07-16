@@ -115,6 +115,16 @@ func TestPlanWritesPreflightedArtifactWithoutActiveExecution(t *testing.T) {
 	if artifact.Plan.RunID == "" || artifact.PlanDigest == "" || len(artifact.Plan.Tools) != 3 || artifact.Plan.Limits.ArjunRequestBudget != 2 {
 		t.Fatalf("incomplete plan artifact: %+v", artifact)
 	}
+	toolHome := filepath.Join(workspace, "runs", artifact.Plan.RunID, "home")
+	if !slices.Contains(artifact.Plan.Environment, "HOME="+toolHome) {
+		t.Fatalf("plan environment does not bind private HOME %q: %#v", toolHome, artifact.Plan.Environment)
+	}
+	if info, err := os.Stat(toolHome); err != nil || !info.IsDir() || info.Mode().Perm() != 0o700 {
+		t.Fatalf("private tool HOME: info=%v err=%v", info, err)
+	}
+	if entries, err := os.ReadDir(toolHome); err != nil || len(entries) != 0 {
+		t.Fatalf("private tool HOME is not empty: entries=%v err=%v", entries, err)
+	}
 	wordlistCopy := filepath.Join(workspace, "runs", artifact.Plan.RunID, "inputs", "wordlist.txt")
 	if artifact.Plan.Inputs.WordlistPath != wordlistCopy || artifact.Plan.Inputs.WordlistPath == wordlistPath {
 		t.Fatalf("plan wordlist path = %q, want private copy %q", artifact.Plan.Inputs.WordlistPath, wordlistCopy)

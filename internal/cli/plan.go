@@ -153,6 +153,8 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 	}
 	wordlistRelative := path.Join("runs", runID, "inputs", "wordlist.txt")
 	wordlistPrivate := filepath.Join(workspaceName, filepath.FromSlash(wordlistRelative))
+	toolHomeRelative := path.Join("runs", runID, "home")
+	toolHome := filepath.Join(workspaceName, filepath.FromSlash(toolHomeRelative))
 	if *outputPath == "" {
 		*outputPath = filepath.Join(workspaceName, "runs", runID, "plan.json")
 	} else if !filepath.IsAbs(*outputPath) {
@@ -193,13 +195,17 @@ func runPlan(args []string, stdout, stderr io.Writer) int {
 			plan.Tools = append(plan.Tools, toolPlan(configured, []string{"arjun"}, directory, "native-output.json"))
 		}
 	}
-	rendered, err := app.BuildPlan(context.Background(), plan, toolCandidates, os.Environ())
+	rendered, err := app.BuildPlan(context.Background(), plan, toolCandidates, append(os.Environ(), "HOME="+toolHome))
 	if err != nil {
 		fmt.Fprintf(stderr, "reconctx plan: %v\n", err)
 		return 1
 	}
 	if err := root.CreateRunDir(runID); err != nil {
 		fmt.Fprintf(stderr, "reconctx plan: %v\n", err)
+		return 1
+	}
+	if err := root.MkdirAll(toolHomeRelative); err != nil {
+		fmt.Fprintf(stderr, "reconctx plan: create private tool home: %v\n", err)
 		return 1
 	}
 	if err := root.WriteFileExclusive(wordlistRelative, wordlistDocument); err != nil {

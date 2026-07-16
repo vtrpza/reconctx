@@ -124,3 +124,21 @@ func TestPublishTreeRejectsEntryOverflowBeforeStaging(t *testing.T) {
 		t.Fatalf("entry overflow created staging state: %v", err)
 	}
 }
+
+func TestListTreeFDDoesNotReuseCallerOffset(t *testing.T) {
+	directory := t.TempDir()
+	if err := os.WriteFile(filepath.Join(directory, "file"), []byte("data"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	opened, err := os.Open(directory)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer opened.Close()
+	if _, err := opened.ReadDir(-1); err != nil {
+		t.Fatal(err)
+	}
+	if entries, err := listTreeFD(int(opened.Fd())); err != nil || !slices.Equal(entries, []string{"file"}) {
+		t.Fatalf("entries = %v, %v", entries, err)
+	}
+}

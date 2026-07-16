@@ -158,13 +158,15 @@ tools:
 limits:
   arjun_max_targets: 25
   arjun_request_budget: ...
-environment_allowlist: [LANG, PATH, TZ]
-environment: [LANG=C.UTF-8, PATH=/approved/bin:/usr/bin, TZ=UTC]
+environment_allowlist: [HOME, LANG, PATH, TZ]
+environment: [HOME=/absolute/private/workspace/runs/run_.../home, LANG=C.UTF-8, PATH=/approved/bin:/usr/bin, TZ=UTC]
 workspace_root: /absolute/no-symlink/path
 plan_digest: sha256:...
 ```
 
 Arguments are stored as arrays and executed without shell interpolation. A separate redacted display form is generated for logs/handoff.
+
+`HOME` is bound to an empty private directory under the run, not inherited from the operator, so tools that require a home directory cannot load ambient user configuration.
 
 Planning copies the bounded source wordlist byte-for-byte into that private run path before persisting the plan. The private copy, not the caller's source path, is hash-bound and used for later approval, resume, and Arjun execution.
 

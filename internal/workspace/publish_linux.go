@@ -286,7 +286,7 @@ func walkTreeFD(directoryFD int, prefix string, depth int, output *[]string) err
 	if depth > maxTreeDepth {
 		return fmt.Errorf("tree exceeds maximum depth: %w", ErrTooLarge)
 	}
-	duplicate, err := syscall.Dup(directoryFD)
+	duplicate, err := syscall.Openat(directoryFD, ".", syscall.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)
 	if err != nil {
 		return err
 	}

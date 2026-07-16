@@ -1,6 +1,7 @@
 profile_version: reconctx-profile/v0
 name: web-blackbox
 environment_allowlist:
+  - HOME
   - LANG
   - PATH
   - TZ
